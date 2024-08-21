@@ -8,7 +8,7 @@ const BoxContainerWrapper = styled.div``;
 
 function BoxContainer(props: Props) {
   return (
-    <BoxContainerWrapper className="w-full shadow-md border-red-500 border-2 h-[40rem]">
+    <BoxContainerWrapper className="w-full min-h-[40rem] shadow-sm rounded-[1.5rem] p-4 border-gray-300 border-[1px]">
       {props.children}
     </BoxContainerWrapper>
   );

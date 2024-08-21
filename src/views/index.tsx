@@ -12,22 +12,23 @@ function Mainview(props: Props) {
   const [state, setState] = useState('bridgeDeposit');
   return (
     <MainviewWrapper className="max-w-screen-sm w-full mx-auto relative">
-      <div
+      {/* <div
         onClick={() => {
           setState('transaction');
         }}
-        className='text-primary'
+        className="text-primary"
       >
         transaction
       </div>
       <div
-        className='text-secondary'
+        className="text-secondary"
         onClick={() => {
           setState('bridgeDeposit');
         }}
       >
         deposit
-      </div>
+      </div> */}
+
       <BoxAnimate isShow={state === 'bridgeDeposit'}>
         <Bridge />
       </BoxAnimate>

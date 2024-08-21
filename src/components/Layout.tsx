@@ -29,7 +29,7 @@ function Layout(props: Props) {
         </div>
         <ButtonConectWallet />
       </div>
-      <div className="h-full max-h-screen pt-20 pb-6">{props.children}</div>
+      <div className="h-full max-h-screen pt-20 pb-6 px-4">{props.children}</div>
     </LayoutWrapper>
   );
 }
