@@ -13,6 +13,7 @@ const LayoutWrapper = styled.div`
   height: 100vh;
   width: 100vw;
   position: relative;
+  overflow: hidden;
 `;
 
 function Layout(props: Props) {
