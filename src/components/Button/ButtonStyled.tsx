@@ -83,15 +83,22 @@ function ButtonStyled({
       console.log('enter press here! ');
     }
   };
+
+  const onClickButton = (e: any) => {
+    if (disabled || loading) {
+      return;
+    }
+    return onClick && onClick(e);
+  };
   return (
     <ButtonStyledWrapper
       className={`text-2xl relative rounded-md overflow-hidden text-center cursor-pointer font-bold ${classContainer}`}
       style={style}
       disabled={disabled || loading}
+      onClick={onClickButton}
     >
       <div className="overlay"></div>
       <button
-        onClick={onClick}
         className={className || ''}
         disabled={disabled || loading}
         type={type}

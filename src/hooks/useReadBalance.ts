@@ -25,7 +25,6 @@ export const useReadBalance = ({
 }: UseReadBalanceArgs) => {
   const { address } = useAccount();
 
-  console.log({ selectedToken });
 
   const isETH = selectedToken.extensions.opTokenId.toLowerCase() === 'eth';
 

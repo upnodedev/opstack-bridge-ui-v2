@@ -12,14 +12,19 @@ import { useOPTokens } from '@/hooks/useOPTokens';
 import { Token } from '@/utils/opType';
 import { useReadBalance } from '@/hooks/useReadBalance';
 import { parseEther } from 'viem';
+import { useAccount } from 'wagmi';
+import ButtonConectWallet from '@/components/Button/ButtonConectWallet';
+import ReviewDeposit from './ReviewDeposit';
 
-interface Props extends SimpleComponent {}
+interface Props extends SimpleComponent {
+  amount: string | undefined;
+  setAmount: (amount: string) => void;
+  setPage: (page: string) => void;
+}
 
-const BridgeWrapper = styled.div``;
-
-function Bridge(props: Props) {
+function Bridge({ amount, setAmount, setPage }: Props) {
+  const { isConnected } = useAccount();
   const [mode, setMode] = useState('deposit');
-  const [amount, setAmount] = useState<string | undefined>(undefined);
   const [validationError, setValidationError] = useState<string | undefined>(
     undefined
   );
@@ -53,20 +58,10 @@ function Bridge(props: Props) {
     selectedToken: l1Token,
   });
 
-
   useEffect(() => {
-    if (typeof amount === 'undefined') {
-      if (typeof amount === 'undefined') {
-        setValidationError('');
-        return;
-      }
-
-      const bigAmount = parseEther(amount);
-      if (balance && bigAmount > balance.data.value) {
-        setValidationError('Insufficent Balance');
-      }
-
-      setValidationError('');
+    if (typeof amount === 'undefined' || amount === '') {
+      setValidationError('Please enter amount');
+      return;
     }
 
     const bigAmount = parseEther(amount);
@@ -75,12 +70,17 @@ function Bridge(props: Props) {
       return;
     }
 
+    setValidationError('');
     return;
-  }, [amount]);
+  }, [amount, balance]);
 
   const onAmountChange = (amount: string) => {
     setAmount(amount);
-  }
+  };
+
+  const ReviewDeposit = () => {
+    setPage('reviewDeposit');
+  };
 
   return (
     <BoxContainer>
@@ -123,23 +123,21 @@ function Bridge(props: Props) {
         <ChainBox type="deposit" />
 
         {/*  */}
-        <div className="w-full rounded-2xl border-[1px] border-gray-300 bg-gray-100 flex justify-between items-center py-2 px-4 relative">
-          <div className="flex flex-col">
+        <div className="w-full rounded-2xl border-[1px] border-gray-300 bg-gray-100 flex items-center py-2 px-4 relative gap-5">
+          <div className="flex flex-col flex-1">
             <input
-              className={`${
-                validationError ? 'outline-solid outline-red-500' : ''
-              } 
-              w-[180px] rounded-xl border-0 py-1 text-right text-2xl font-bold text-black outline-none`}
+              className={`w-full text-display-md text-left font-bold text-black outline-none bg-transparent`}
               placeholder="0.0"
               type="number"
               autoFocus={true}
               maxLength={80}
               min={0}
+              value={amount}
               onChange={(e) => onAmountChange(e.target.value)}
             />
-            <span className="text-gray-500">$0.0001</span>
+            <span className="text-gray-500 mt-2">$0.0001</span>
           </div>
-          <div>
+          <div className="">
             <div className="flex items-center justify-between bg-primary rounded-full px-4 py-2 gap-2">
               <div className="flex items-center gap-2">
                 <div className="w-[1.5rem] h-[1.5rem] p-1 rounded-full bg-white">
@@ -168,11 +166,20 @@ function Bridge(props: Props) {
           </div>
         </div>
 
-        <DepositDetail />
+        <DepositDetail
+          l1={l1}
+          l2={l2}
+          amount={amount}
+          selectedTokenPair={selectedTokenPair}
+        />
 
-        <ButtonStyled>
-          <div>Deposit</div>
-        </ButtonStyled>
+        {isConnected ? (
+          <ButtonStyled disabled={!!validationError} onClick={ReviewDeposit}>
+            {validationError ? validationError : 'Review Deposit'}
+          </ButtonStyled>
+        ) : (
+          <ButtonStyled>Please Connect Wallet</ButtonStyled>
+        )}
 
         {/*  */}
         <PoweredBy />
