@@ -1,10 +1,15 @@
 const ENV = {
   WALLETCONNECT_PROJECT_ID: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
   APP_NAME: import.meta.env.VITE_APP_NAME,
+  APP_LOGO: import.meta.env.VITE_APP_LOGO,
+
+  // color
+  PRIMARY_COLOR: import.meta.env.VITE_COLOR_PRIMARY || '#174BDE',
+  SECONDARY_COLOR: import.meta.env.VITE_COLOR_SECONDARY || '#72EDF2',
 
   // layer 1
   L1_CHAIN_NAME: import.meta.env.VITE_L1_CHAIN_NAME,
-  L1_CHAIN_ID: import.meta.env.VITE_L1_CHAIN_ID,
+  L1_CHAIN_ID: +import.meta.env.VITE_L1_CHAIN_ID,
   L1_RPC_URL: import.meta.env.VITE_L1_RPC_URL,
   L1_LOGO_URL: import.meta.env.VITE_L1_LOGO_URL,
   L1_NATIVE_CURRENCY_DECIMALS: import.meta.env.VITE_L1_NATIVE_CURRENCY_DECIMALS,
@@ -16,7 +21,7 @@ const ENV = {
 
   // layer 2
   L2_CHAIN_NAME: import.meta.env.VITE_L2_CHAIN_NAME,
-  L2_CHAIN_ID: import.meta.env.VITE_L2_CHAIN_ID,
+  L2_CHAIN_ID: +import.meta.env.VITE_L2_CHAIN_ID,
   L2_RPC_URL: import.meta.env.VITE_L2_RPC_URL,
   L2_LOGO_URL: import.meta.env.VITE_L2_LOGO_URL,
   L2_NATIVE_CURRENCY_DECIMALS: import.meta.env.VITE_L2_NATIVE_CURRENCY_DECIMALS,
