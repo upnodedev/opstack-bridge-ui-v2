@@ -1,7 +1,6 @@
 import BoxContainer from '@/components/Box/BoxContainer';
 import ENV from '@/utils/ENV';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import styled from 'styled-components';
+import { useCallback, useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import ButtonStyled from '@/components/Button/ButtonStyled';
 import ChainBox from '@/components/Bridge/ChainBox';
@@ -13,17 +12,17 @@ import { Token } from '@/utils/opType';
 import { useReadBalance } from '@/hooks/useReadBalance';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
-import ButtonConectWallet from '@/components/Button/ButtonConectWallet';
-import ReviewDeposit from './ReviewDeposit';
+import { useAppDispatch } from '@/states/hooks';
+import { openModal } from '@/states/modal/reducer';
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
   setAmount: (amount: string) => void;
-  setPage: (page: string) => void;
 }
 
-function Bridge({ amount, setAmount, setPage }: Props) {
+function Bridge({ amount, setAmount }: Props) {
   const { isConnected } = useAccount();
+  const dispatch = useAppDispatch();
   const [mode, setMode] = useState('deposit');
   const [validationError, setValidationError] = useState<string | undefined>(
     undefined
@@ -79,7 +78,7 @@ function Bridge({ amount, setAmount, setPage }: Props) {
   };
 
   const ReviewDeposit = () => {
-    setPage('reviewDeposit');
+    dispatch(openModal('reviewDeposit'));
   };
 
   return (
