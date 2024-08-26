@@ -8,7 +8,7 @@ const TransactionWrapper = styled.div``;
 function Transaction(props: Props) {
   return (
     <TransactionWrapper>
-      <BoxContainer>Transaction</BoxContainer>
+      <BoxContainer hasExit={true}>Transaction</BoxContainer>
     </TransactionWrapper>
   );
 }

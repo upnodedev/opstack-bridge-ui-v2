@@ -21,3 +21,4 @@ export function shortenAddress(
 
   return `${start}...${end}`;
 }
+

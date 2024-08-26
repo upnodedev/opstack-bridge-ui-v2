@@ -33,16 +33,16 @@ const Modal: React.FC<ModalProps> = ({ modalId, children }) => {
 
   return shouldRender ? (
     <div
-      className={`fixed z-[1000] w-screen h-screen top-0 left-0 flex justify-center items-center`}
+      className={`fixed z-[1000] w-screen h-screen top-0 right-0 flex justify-center items-center`}
     >
       <div
         onClick={handleClose}
-        className={`bg-black bg-opacity-40 w-full h-full absolute top-0 left-0 ${
+        className={`bg-black bg-opacity-40 w-full h-full absolute top-0 left-0 backdrop-blur-sm ${
           isVisible ? (opening ? 'opacity-100' : 'opacity-100') : 'opacity-0 '
         }`}
       ></div>
       <div
-        className={`max-w-screen-sm relative w-full transition-all ${
+        className={`max-w-[30rem] w-full relative transition-all ${
           opening ? 'translate-y-0 opacity-100' : 'translate-y-[200%] opacity-0'
         }`}
       >

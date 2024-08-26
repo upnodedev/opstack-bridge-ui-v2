@@ -1,27 +1,35 @@
-import { useAccount, useEstimateFeesPerGas, useEstimateGas } from 'wagmi';
+import {
+  useAccount,
+  useEstimateFeesPerGas,
+  useEstimateGas,
+  usePublicClient,
+} from 'wagmi';
 import { useOPWagmiConfig } from './useOPWagmiConfig';
 import { Chain, encodeFunctionData, Hash, parseUnits } from 'viem';
-import { l1StandardBridgeABI } from '@/components/abi/constant';
+import { l1StandardBridgeABI } from '@/abi/constant';
 import { ERC20_DEPOSIT_MIN_GAS_LIMIT } from '@/utils';
 import { Token } from '@/utils/opType';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useOPNetwork } from './useOPNetwork';
+import { useWriteDepositETH } from './useWriteDepositETH';
 
 type paramsArg = {
+  address: `0x${string}` | undefined;
   amount: string | undefined;
   selectedTokenPair: [Token, Token];
 };
 
-const useDeposit = ({ amount, selectedTokenPair }: paramsArg) => {
+const useDeposit = ({ amount, selectedTokenPair, address }: paramsArg) => {
   const { chain } = useAccount();
   const estimateFeePerGas = useEstimateFeesPerGas({ chainId: chain?.id });
 
   const { opConfig } = useOPWagmiConfig();
 
   const { networkPair } = useOPNetwork();
-  const { l2 } = networkPair;
+  const { l2, l1 } = networkPair;
 
   const l2Chains = opConfig?.l2chains;
+  const l1PublicClient = usePublicClient({ chainId: l1.id });
 
   const txData = useMemo(() => {
     if (!l2Chains) {
@@ -81,10 +89,32 @@ const useDeposit = ({ amount, selectedTokenPair }: paramsArg) => {
     return estimateFeePerGas.data.maxFeePerGas * gasEstimate.data;
   }, [estimateFeePerGas.data?.maxFeePerGas, gasEstimate.data]);
 
+  const { data: l1TxHash, writeDepositETHAsync } = useWriteDepositETH({
+    config: opConfig,
+  });
+
+  const txHash = l1TxHash;
+
+  const onSubmitDeposit = useCallback(async () => {
+    if (!l1PublicClient) return;
+    if (txData.isETH) {
+      await writeDepositETHAsync({
+        args: {
+          to: address,
+          amount: txData.amount,
+          gasLimit: ERC20_DEPOSIT_MIN_GAS_LIMIT,
+        },
+        l2ChainId: l2.id,
+      });
+    }
+  }, [l1PublicClient, txData.isETH, txData.amount, writeDepositETHAsync, address, l2.id]);
+
   return {
     gasPending: gasEstimate.isPending || estimateFeePerGas.isPending,
     gasPrice: gasPrice,
     gasEstimate: gasEstimate.data || 0n,
+    txHash,
+    onSubmitDeposit,
   };
 };
 

@@ -87,4 +87,3 @@ export const l2Chain = {
   },
   sourceId: l1Chain.id,
 } as const satisfies Chain;
-

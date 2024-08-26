@@ -16,8 +16,13 @@ export const ModalSlide = createSlice({
     closeModal: (state, { payload }) => {
       state[payload] = false;
     },
+    closeModalAll: (state) => {
+      Object.keys(state).forEach((key) => {
+        state[key] = false;
+      });
+    },
   },
 });
 
-export const { openModal, closeModal } = ModalSlide.actions;
+export const { openModal, closeModal, closeModalAll } = ModalSlide.actions;
 export default ModalSlide.reducer;

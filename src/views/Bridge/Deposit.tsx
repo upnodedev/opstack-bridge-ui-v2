@@ -6,21 +6,25 @@ import ButtonStyled from '@/components/Button/ButtonStyled';
 import ChainBox from '@/components/Bridge/ChainBox';
 import DepositDetail from '@/components/Bridge/DepositDetail';
 import PoweredBy from '@/components/PoweredBy';
-import { useOPNetwork } from '@/hooks/useOPNetwork';
-import { useOPTokens } from '@/hooks/useOPTokens';
 import { Token } from '@/utils/opType';
 import { useReadBalance } from '@/hooks/useReadBalance';
-import { parseEther } from 'viem';
+import { Chain, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 import { useAppDispatch } from '@/states/hooks';
 import { openModal } from '@/states/modal/reducer';
+import { openPage } from '@/states/layout/reducer';
+import { l1Chain, l2Chain } from '@/utils/chain';
+import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
-  setAmount: (amount: string) => void;
+  onAmountChange: (e: any) => void;
+  selectedTokenPair: [Token, Token];
+  l1: typeof l1Chain;
+  l2: typeof l2Chain;
 }
 
-function Bridge({ amount, setAmount }: Props) {
+function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
   const { isConnected } = useAccount();
   const dispatch = useAppDispatch();
   const [mode, setMode] = useState('deposit');
@@ -28,24 +32,7 @@ function Bridge({ amount, setAmount }: Props) {
     undefined
   );
 
-  const { networkPair } = useOPNetwork();
-  const { l1, l2 } = networkPair;
-
-  const { ethToken: l1EthToken } = useOPTokens({ chainId: networkPair.l1.id });
-  const { ethToken: l2EthToken } = useOPTokens({ chainId: networkPair.l2.id });
-  const [selectedTokenPair, setSelectedTokenPair] = useState<[Token, Token]>([
-    l1EthToken,
-    l2EthToken,
-  ]);
-
-  const [l1Token, l2Token] = selectedTokenPair;
-
-  const onTokenChange = useCallback(
-    (l1Token: Token, l2Token: Token) => {
-      setSelectedTokenPair([l1Token, l2Token]);
-    },
-    [setSelectedTokenPair]
-  );
+  const [l1Token] = selectedTokenPair;
 
   const onClickMode = (mode: string) => {
     setMode(mode);
@@ -73,13 +60,15 @@ function Bridge({ amount, setAmount }: Props) {
     return;
   }, [amount, balance]);
 
-  const onAmountChange = (amount: string) => {
-    setAmount(amount);
-  };
-
-  const ReviewDeposit = () => {
+  const reviewDeposit = () => {
     dispatch(openModal('reviewDeposit'));
   };
+
+  const openTranaction = () => {
+    dispatch(openPage('transaction'));
+  };
+
+  const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
 
   return (
     <BoxContainer>
@@ -110,6 +99,7 @@ function Bridge({ amount, setAmount }: Props) {
           </div>
 
           <button
+            onClick={openTranaction}
             className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] text-primary border-primary flex items-center justify-center gap-2`}
           >
             Activity
@@ -131,10 +121,10 @@ function Bridge({ amount, setAmount }: Props) {
               autoFocus={true}
               maxLength={80}
               min={0}
-              value={amount}
-              onChange={(e) => onAmountChange(e.target.value)}
+              value={amount ? amount : ''}
+              onChange={onAmountChange}
             />
-            <span className="text-gray-500 mt-2">$0.0001</span>
+            <span className="text-gray-500 mt-2 h-6">{usdtPrice && amount ? `$${(usdtPrice * +amount).toFixed(8)}` : '' }</span>
           </div>
           <div className="">
             <div className="flex items-center justify-between bg-primary rounded-full px-4 py-2 gap-2">
@@ -173,7 +163,7 @@ function Bridge({ amount, setAmount }: Props) {
         />
 
         {isConnected ? (
-          <ButtonStyled disabled={!!validationError} onClick={ReviewDeposit}>
+          <ButtonStyled disabled={!!validationError} onClick={reviewDeposit}>
             {validationError ? validationError : 'Review Deposit'}
           </ButtonStyled>
         ) : (
