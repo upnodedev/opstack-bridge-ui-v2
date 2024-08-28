@@ -16,13 +16,6 @@ import {
 import { NetworkPairGroup } from "./opType";
 import { l1Chain, l2Chain } from "./chain";
 
-export type NetworkType =
-  | "base"
-  | "op"
-  | "pgn"
-  | "zora"
-  | "main";
-
 export const networkPairsByGroup: NetworkPairGroup = {
   base: {
     mainnet: [mainnet, base],

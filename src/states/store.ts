@@ -1,11 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import ModalReducer from './modal/reducer';
 import LayoutReducer from './layout/reducer';
+import DepositReducer from './deposit/reducer';
+import WithdrawalReducer from './withdrawal/reducer';
 
 export const store = configureStore({
   reducer: {
     modal: ModalReducer,
     layout: LayoutReducer,
+    deposit: DepositReducer,
+    withdrawal: WithdrawalReducer,
   },
 });
 

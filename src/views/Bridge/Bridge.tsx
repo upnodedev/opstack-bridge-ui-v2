@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import ButtonStyled from '@/components/Button/ButtonStyled';
 import ChainBox from '@/components/Bridge/ChainBox';
-import DepositDetail from '@/components/Bridge/DepositDetail';
+import DepositDetail from '@/components/Bridge/BridgeDetail';
 import PoweredBy from '@/components/PoweredBy';
 import { Token } from '@/utils/opType';
 import { useReadBalance } from '@/hooks/useReadBalance';
@@ -27,15 +27,16 @@ interface Props extends SimpleComponent {
 function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
   const { isConnected } = useAccount();
   const dispatch = useAppDispatch();
-  const [mode, setMode] = useState('deposit');
+  const [type, setType] = useState<'withdrawal' | 'deposit'>('deposit');
   const [validationError, setValidationError] = useState<string | undefined>(
     undefined
   );
 
   const [l1Token] = selectedTokenPair;
 
-  const onClickMode = (mode: string) => {
-    setMode(mode);
+  const onClickMode = (mode: 'withdrawal' | 'deposit') => {
+    onAmountChange({ target: { value: '' } });
+    setType(mode);
   };
 
   const balance = useReadBalance({
@@ -61,7 +62,11 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
   }, [amount, balance]);
 
   const reviewDeposit = () => {
-    dispatch(openModal('reviewDeposit'));
+    if (type === 'deposit') {
+      dispatch(openModal('reviewDeposit'));
+    } else {
+      dispatch(openModal('reviewWithdrawal'));
+    }
   };
 
   const openTranaction = () => {
@@ -78,7 +83,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
           <div className="flex border-[1px] border-gray-300 bg-gray-100 rounded-full px-2 py-2 gap-2">
             <button
               className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] ${
-                mode === 'deposit'
+                type === 'deposit'
                   ? 'text-primary border-primary'
                   : 'text-gray-600 border-transparent'
               }`}
@@ -88,7 +93,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
             </button>
             <button
               className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] ${
-                mode === 'withdrawal'
+                type === 'withdrawal'
                   ? 'text-primary border-primary'
                   : 'text-gray-600 border-transparent'
               }`}
@@ -109,7 +114,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
           </button>
         </div>
 
-        <ChainBox type="deposit" />
+        <ChainBox type={type} />
 
         {/*  */}
         <div className="w-full rounded-2xl border-[1px] border-gray-300 bg-gray-100 flex items-center py-2 px-4 relative gap-5">
@@ -124,7 +129,11 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
               value={amount ? amount : ''}
               onChange={onAmountChange}
             />
-            <span className="text-gray-500 mt-2 h-6">{usdtPrice && amount ? `$${(usdtPrice * +amount).toFixed(8)}` : '' }</span>
+            <span className="text-gray-500 mt-2 h-6">
+              {usdtPrice && amount
+                ? `$${(usdtPrice * +amount).toFixed(8)}`
+                : ''}
+            </span>
           </div>
           <div className="">
             <div className="flex items-center justify-between bg-primary rounded-full px-4 py-2 gap-2">
@@ -160,11 +169,16 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
           l2={l2}
           amount={amount}
           selectedTokenPair={selectedTokenPair}
+          type={type}
         />
 
         {isConnected ? (
           <ButtonStyled disabled={!!validationError} onClick={reviewDeposit}>
-            {validationError ? validationError : 'Review Deposit'}
+            {validationError
+              ? validationError
+              : type === 'deposit'
+              ? 'Review Deposit'
+              : 'Withdraw'}
           </ButtonStyled>
         ) : (
           <ButtonStyled>Please Connect Wallet</ButtonStyled>

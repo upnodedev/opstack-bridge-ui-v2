@@ -6,10 +6,11 @@ import ReviewDeposit from './Bridge/ReviewDeposit';
 import { useAppDispatch, useAppSelector } from '@/states/hooks';
 import Modal from '@/components/Modal';
 import { openModal } from '@/states/modal/reducer';
-import Bridge from './Bridge/Deposit';
+import Bridge from './Bridge/Bridge';
 import { Token } from '@/utils/opType';
 import { useOPTokens } from '@/hooks/useOPTokens';
 import { useOPNetwork } from '@/hooks/useOPNetwork';
+import ReviewWithdrawal from './Bridge/ReviewWithdrawal';
 
 interface Props extends SimpleComponent {}
 
@@ -58,6 +59,15 @@ function Mainview(props: Props) {
 
       <Modal modalId="reviewDeposit">
         <ReviewDeposit
+          amount={amount}
+          l1={l1}
+          l2={l2}
+          selectedTokenPair={selectedTokenPair}
+        />
+      </Modal>
+
+      <Modal modalId="reviewWithdrawal">
+        <ReviewWithdrawal
           amount={amount}
           l1={l1}
           l2={l2}

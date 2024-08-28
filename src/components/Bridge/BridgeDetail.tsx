@@ -1,6 +1,7 @@
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import useDeposit from '@/hooks/useDeposit';
-import { shortenAddress } from '@/utils';
+import useWithdrawal from '@/hooks/useWithdrawal';
+import { formatSecsString, shortenAddress } from '@/utils';
 import ENV from '@/utils/ENV';
 import { Token } from '@/utils/opType';
 import { Icon } from '@iconify/react/dist/iconify.js';
@@ -12,15 +13,39 @@ interface Props extends SimpleComponent {
   l2: Chain;
   amount: string | undefined;
   selectedTokenPair: [Token, Token];
+  type: 'withdrawal' | 'deposit';
 }
 
-function DepositDetail({ l1, l2, amount, selectedTokenPair }: Props) {
+function BridgeDetail({ l1, l2, amount, selectedTokenPair, type }: Props) {
   const { address } = useAccount();
   const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
-  const { gasPrice } = useDeposit({
+  const { gasPrice: gasPriceDeposit } = useDeposit({
     amount: amount,
     selectedTokenPair: selectedTokenPair,
+    address,
   });
+  const { gasPrice: gasPriceWithdrawal } = useWithdrawal({
+    amount: amount,
+    selectedTokenPair: selectedTokenPair,
+    address,
+  });
+
+  const getTransferTime = () => {
+    if (type === 'deposit') {
+      return '3 mins';
+    } else {
+      const transferTimeTimeSecs = ENV.WITHDRAWAL_PERIOD;
+      return formatSecsString(transferTimeTimeSecs);
+    }
+  };
+
+  const getGasPrice = () => {
+    if (type === 'deposit') {
+      return gasPriceDeposit;
+    } else {
+      return gasPriceWithdrawal;
+    }
+  };
 
   return (
     <div className="w-full rounded-2xl border-[1px] border-gray-300 bg-gray-100 py-1 px-4 relative">
@@ -62,7 +87,7 @@ function DepositDetail({ l1, l2, amount, selectedTokenPair }: Props) {
           <p>Transfer Time </p>
         </div>
         <div className="text-primary">
-          <p>~3 mins</p>
+          <p>~ {getTransferTime()}</p>
         </div>
       </div>
 
@@ -77,7 +102,11 @@ function DepositDetail({ l1, l2, amount, selectedTokenPair }: Props) {
         </div>
         <div className="text-primary">
           <p>
-            ~ {usdtPrice ? (+formatEther(gasPrice) * usdtPrice).toFixed(4) : 0}$
+            ~{' '}
+            {usdtPrice
+              ? (+formatEther(getGasPrice()) * usdtPrice).toFixed(4)
+              : 0}
+            $
           </p>
         </div>
       </div>
@@ -85,4 +114,4 @@ function DepositDetail({ l1, l2, amount, selectedTokenPair }: Props) {
   );
 }
 
-export default DepositDetail;
+export default BridgeDetail;
