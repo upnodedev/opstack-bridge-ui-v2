@@ -40,9 +40,6 @@ const useWithdrawal = ({ amount, selectedTokenPair, address }: paramsArg) => {
     if (!l2Chains) {
       throw new Error('Cannot find l2Chains');
     }
-    if (!address) {
-      throw new Error('Cannot find address');
-    }
     const l2StandardBridgeAddress =
       l2Chains[l2.id].l2Addresses.l2StandardBridge.address;
     if (!l2StandardBridgeAddress) {
@@ -54,11 +51,13 @@ const useWithdrawal = ({ amount, selectedTokenPair, address }: paramsArg) => {
       ? parseEther(amount ?? '0')
       : parseUnits(amount ?? '0', l2Token.decimals);
 
-    const calldata = encodeFunctionData({
-      abi: l2StandardBridgeABI,
-      functionName: 'withdrawTo',
-      args: [OVM_ETH, address, parsedAmount, 0, '0x'],
-    });
+    const calldata = address
+      ? encodeFunctionData({
+          abi: l2StandardBridgeABI,
+          functionName: 'withdrawTo',
+          args: [OVM_ETH, address, parsedAmount, 0, '0x'],
+        })
+      : '0x';
 
     return {
       to: l2StandardBridgeAddress,
