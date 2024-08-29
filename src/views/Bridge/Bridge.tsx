@@ -15,6 +15,8 @@ import { openModal } from '@/states/modal/reducer';
 import { openPage } from '@/states/layout/reducer';
 import { l1Chain, l2Chain } from '@/utils/chain';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
+import { useSwitchNetworkDirection } from '@/hooks/useSwitchNetworkPair';
+import { useIsNetworkUnsupported } from '@/hooks/useIsNetworkUnsupported';
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
@@ -25,7 +27,7 @@ interface Props extends SimpleComponent {
 }
 
 function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
-  const { isConnected } = useAccount();
+  const { chain } = useAccount();
   const dispatch = useAppDispatch();
   const [type, setType] = useState<'withdrawal' | 'deposit'>('deposit');
   const [validationError, setValidationError] = useState<string | undefined>(
@@ -74,6 +76,56 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
   };
 
   const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
+
+  const { switchNetworkPair: switchToL1 } = useSwitchNetworkDirection({
+    direction: 'l1',
+  });
+  const { switchNetworkPair: switchToL2 } = useSwitchNetworkDirection({
+    direction: 'l2',
+  });
+  const { isUnsupported } = useIsNetworkUnsupported();
+
+  const ConfirmButton = () => {
+    const shouldDisableReview =
+      parseEther(amount ?? '0') <= 0 || !!validationError;
+
+    if (isUnsupported) {
+      return (
+        <ButtonStyled color="red" disabled>
+          Unsupported Network
+        </ButtonStyled>
+      );
+    }
+
+    if (!chain) {
+      return <ButtonStyled disabled={true}>Connect Wallet</ButtonStyled>;
+    }
+    if (type === 'deposit' && l1.id !== chain?.id) {
+      return (
+        <ButtonStyled onClick={() => switchToL1()}>
+          Switch to {l1.name}
+        </ButtonStyled>
+      );
+    }
+
+    if (type === 'withdrawal' && l2.id !== chain?.id) {
+      return (
+        <ButtonStyled onClick={() => switchToL2()}>
+          Switch to {l2.name}
+        </ButtonStyled>
+      );
+    }
+
+    return (
+      <ButtonStyled disabled={!!shouldDisableReview} onClick={reviewDeposit}>
+        {validationError
+          ? validationError
+          : type === 'deposit'
+          ? 'Review Deposit'
+          : 'Withdraw'}
+      </ButtonStyled>
+    );
+  };
 
   return (
     <BoxContainer>
@@ -172,17 +224,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
           type={type}
         />
 
-        {isConnected ? (
-          <ButtonStyled disabled={!!validationError} onClick={reviewDeposit}>
-            {validationError
-              ? validationError
-              : type === 'deposit'
-              ? 'Review Deposit'
-              : 'Withdraw'}
-          </ButtonStyled>
-        ) : (
-          <ButtonStyled>Please Connect Wallet</ButtonStyled>
-        )}
+        <ConfirmButton />
 
         {/*  */}
         <PoweredBy />

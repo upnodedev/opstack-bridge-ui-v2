@@ -11,6 +11,7 @@ import { Token } from '@/utils/opType';
 import { useOPTokens } from '@/hooks/useOPTokens';
 import { useOPNetwork } from '@/hooks/useOPNetwork';
 import ReviewWithdrawal from './Bridge/ReviewWithdrawal';
+import { useAccount } from 'wagmi';
 
 interface Props extends SimpleComponent {}
 
@@ -18,6 +19,7 @@ const MainviewWrapper = styled.div``;
 
 function Mainview(props: Props) {
   // deposit value
+  const { isConnected, chain } = useAccount();
   const [amount, setAmount] = useState<string | undefined>(undefined);
   const { networkPair } = useOPNetwork();
   const { l1, l2 } = networkPair;

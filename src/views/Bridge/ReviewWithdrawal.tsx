@@ -50,7 +50,6 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
     return formatSecsString(transferTimeTimeSecs);
   };
 
-
   return (
     <ReviewWithdrawalWrapper>
       <BoxContainer height="auto">

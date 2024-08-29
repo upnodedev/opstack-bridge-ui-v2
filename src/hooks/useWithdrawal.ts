@@ -90,7 +90,14 @@ const useWithdrawal = ({ amount, selectedTokenPair, address }: paramsArg) => {
       },
       l2ChainId: l2.id,
     });
-  }, []);
+  }, [
+    address,
+    l2.id,
+    l2PublicClient,
+    txData.amount,
+    txData.calldata,
+    writeWithdrawETHAsync,
+  ]);
 
   const gasEstimate = useEstimateGas({
     chainId: chain?.id,
