@@ -45,11 +45,6 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
     dispatch(closeModalAll());
   };
 
-  const getTransferTime = () => {
-    const transferTimeTimeSecs = ENV.WITHDRAWAL_PERIOD;
-    return formatSecsString(transferTimeTimeSecs);
-  };
-
   return (
     <ReviewWithdrawalWrapper>
       <BoxContainer height="auto">
@@ -88,7 +83,7 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
                   fontSize={'1.2rem'}
                   className="text-yellow-500"
                 />
-                <p className="text-gray-600">Wait ~ 3 mins</p>
+                <p className="text-gray-600">Wait ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}</p>
               </div>
             </div>
 
@@ -117,7 +112,7 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
                   fontSize={'1.2rem'}
                   className="text-yellow-500"
                 />
-                <p className="text-gray-600">Wait ~ {getTransferTime()}</p>
+                <p className="text-gray-600">Wait ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}</p>
               </div>
             </div>
 

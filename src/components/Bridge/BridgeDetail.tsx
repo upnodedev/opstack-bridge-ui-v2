@@ -32,9 +32,9 @@ function BridgeDetail({ l1, l2, amount, selectedTokenPair, type }: Props) {
 
   const getTransferTime = () => {
     if (type === 'deposit') {
-      return '3 mins';
+      return formatSecsString(ENV.STATE_ROOT_PERIOD);
     } else {
-      const transferTimeTimeSecs = ENV.WITHDRAWAL_PERIOD;
+      const transferTimeTimeSecs = ENV.WITHDRAWAL_PERIOD + ENV.STATE_ROOT_PERIOD;
       return formatSecsString(transferTimeTimeSecs);
     }
   };
