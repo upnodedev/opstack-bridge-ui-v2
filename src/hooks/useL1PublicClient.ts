@@ -2,11 +2,9 @@ import { useOPNetwork } from "./useOPNetwork";
 import { type UsePublicClientReturnType } from "wagmi";
 import { PublicActionsL1, publicActionsL1 } from "viem/op-stack";
 import { createPublicClient, http } from "viem";
-import { NetworkType } from "@/utils/opType";
 
 export type UseL1PublicClientArgs = {
   chainId?: number;
-  type: NetworkType;
 };
 
 export type l1PublicClientType = Exclude<

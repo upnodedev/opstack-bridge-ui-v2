@@ -65,10 +65,20 @@ export const fetchWithdraws = createAsyncThunk(
     receiver?: string;
   }) => {
     const { page, limit, sender, receiver } = params;
+
     const queryParams = new URLSearchParams({
       page: String(page),
       limit: String(limit),
     });
+
+    if (!sender && !receiver) {
+      return {
+        items: [],
+        totalItems: 0,
+        totalPages: 0,
+        currentPage: 1,
+      };
+    }
 
     if (sender) queryParams.append('sender', sender);
     if (receiver) queryParams.append('receiver', receiver);
@@ -111,6 +121,8 @@ export const fetchWithdraws = createAsyncThunk(
 
           const logs = extractWithdrawalMessageLogs(receipt);
           const [withdrawal] = getWithdrawals(receipt);
+
+          console.log(item.transactionhash, { logs, withdrawal });
         }
 
         return {

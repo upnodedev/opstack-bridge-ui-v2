@@ -13,10 +13,9 @@ import {
   zoraSepolia,
 } from "viem/chains";
 
-import { NetworkPairGroup } from "./opType";
 import { l1Chain, l2Chain } from "./chain";
 
-export const networkPairsByGroup: NetworkPairGroup = {
+export const networkPairsByGroup = {
   base: {
     mainnet: [mainnet, base],
     sepolia: [sepolia, baseSepolia],

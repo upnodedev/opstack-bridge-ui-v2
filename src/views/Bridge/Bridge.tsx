@@ -17,6 +17,8 @@ import { l1Chain, l2Chain } from '@/utils/chain';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import { useSwitchNetworkDirection } from '@/hooks/useSwitchNetworkPair';
 import { useIsNetworkUnsupported } from '@/hooks/useIsNetworkUnsupported';
+import { default as ETH } from '@/assets/eth.svg';
+
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
@@ -192,7 +194,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
               <div className="flex items-center gap-2">
                 <div className="w-[1.5rem] h-[1.5rem] p-1 rounded-full bg-white">
                   <img
-                    src={`${ENV.L1_LOGO_URL}`}
+                    src={ETH}
                     alt=""
                     className="object-contain w-full h-full"
                   />

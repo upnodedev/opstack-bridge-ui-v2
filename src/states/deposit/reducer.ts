@@ -60,6 +60,15 @@ export const fetchDeposits = createAsyncThunk(
       limit: String(limit),
     });
 
+    if(!sender && !receiver) {
+      return {
+        items: [],
+        totalItems: 0,
+        totalPages: 0,
+        currentPage: 1,
+      }
+    }
+
     if (sender) queryParams.append('sender', sender);
     if (receiver) queryParams.append('receiver', receiver);
     const { l1PublicClient } = useL1PublicClient();
