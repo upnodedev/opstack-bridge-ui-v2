@@ -1,15 +1,15 @@
-import CircleArrowDown from '@/assets/circle-arrow-down.svg';
-import Detail from '@/assets/detail.svg';
-import { default as ETH } from '@/assets/eth.svg';
-import BoxContainer from '@/components/Box/BoxContainer';
-import TransactionItemDeposit from '@/components/Transaction/TransactionItemDeposit';
-import { fetchDeposits } from '@/states/deposit/reducer';
-import { useAppDispatch, useAppSelector } from '@/states/hooks';
-import { fetchWithdraws } from '@/states/withdrawal/reducer';
-import { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { Chain } from 'viem';
-import { useAccount } from 'wagmi';
+import CircleArrowDown from "@/assets/circle-arrow-down.svg";
+import Detail from "@/assets/detail.svg";
+import { default as ETH } from "@/assets/eth.svg";
+import BoxContainer from "@/components/Box/BoxContainer";
+import TransactionItemDeposit from "@/components/Transaction/TransactionItemDeposit";
+import { fetchDeposits } from "@/states/deposit/reducer";
+import { useAppDispatch, useAppSelector } from "@/states/hooks";
+import { fetchWithdraws } from "@/states/withdrawal/reducer";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { Chain } from "viem";
+import { useAccount } from "wagmi";
 
 interface Props extends SimpleComponent {
   l1: Chain;
@@ -41,7 +41,7 @@ function Transaction({ l1, l2 }: Props) {
           <div
             className={`w-1/2 text-center pb-2 border-b border-gray-300 text-gray-500 cursor-pointer 
                 ${
-                  selectedTab === 1 && 'border-b-2 border-primary text-primary'
+                  selectedTab === 1 && "border-b-2 border-primary text-primary"
                 }`}
             onClick={() => {
               setSelectedTab(1);
@@ -56,7 +56,7 @@ function Transaction({ l1, l2 }: Props) {
           </div>
           <div
             className={`w-1/2 text-center pb-2 border-b border-gray-300 text-gray-500 cursor-pointer 
-              ${selectedTab === 2 && 'border-b-2 border-primary text-primary'}`}
+              ${selectedTab === 2 && "border-b-2 border-primary text-primary"}`}
             onClick={() => {
               setSelectedTab(2);
             }}
@@ -64,7 +64,7 @@ function Transaction({ l1, l2 }: Props) {
             <div className="font-semibold">History</div>
           </div>
         </div>
-        <div className='flex flex-col gap-4 mt-4 h-[30rem] overflow-scroll px-4'>
+        <div className="flex flex-col gap-4 mt-4 h-[30rem] overflow-scroll px-4">
           {selectedTab === 1 ? (
             <div className="mt-3">
               <div className="rounded-xl bg-[#F9FAFB] border border-[#E4E7EC] p-3">
