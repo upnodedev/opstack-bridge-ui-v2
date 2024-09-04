@@ -6,6 +6,7 @@ import Mainview from './views';
 import { Provider as ReduxToolkitProvider } from 'react-redux';
 
 function App() {
+
   return (
     <ReduxToolkitProvider store={store}>
       <UsdtPriceProvider>

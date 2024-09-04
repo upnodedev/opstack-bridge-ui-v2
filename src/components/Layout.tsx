@@ -1,7 +1,10 @@
-import MainLogo from "@/assets/upnode.png";
-import { ReactNode } from "react";
-import styled from "styled-components";
-import ButtonConectWallet from "./Button/ButtonConectWallet";
+import MainLogo from '@/assets/upnode.png';
+import { ReactNode } from 'react';
+import styled from 'styled-components';
+import ButtonConectWallet from './Button/ButtonConectWallet';
+import { useAppDispatch } from '@/states/hooks';
+import { increaseRefresh } from '@/states/refresh/reducer';
+import { useInterval } from '@/hooks/useInterval';
 
 interface Props extends SimpleComponent {
   children?: ReactNode;
@@ -17,6 +20,11 @@ const LayoutWrapper = styled.div`
 `;
 
 function Layout(props: Props) {
+  const dispatch = useAppDispatch();
+  const refreshing = () => {
+    dispatch(increaseRefresh());
+  };
+  useInterval(refreshing, 10000);
   return (
     <LayoutWrapper>
       {/* header */}

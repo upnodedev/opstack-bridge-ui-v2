@@ -18,7 +18,6 @@ const config = getDefaultConfig({
 const queryClient = new QueryClient();
 
 const WalletProvider = ({ children }: { children: ReactNode }) => {
-  console.log(import.meta.env.VITE_COLOR_PRIMARY);
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>

@@ -3,10 +3,8 @@ import Detail from "@/assets/detail.svg";
 import { default as ETH } from "@/assets/eth.svg";
 import BoxContainer from "@/components/Box/BoxContainer";
 import TransactionItemDeposit from "@/components/Transaction/TransactionItemDeposit";
-import { fetchDeposits } from "@/states/deposit/reducer";
 import { useAppDispatch, useAppSelector } from "@/states/hooks";
-import { openPage } from "@/states/layout/reducer";
-import { fetchWithdraws } from "@/states/withdrawal/reducer";
+import { fetchTransactions } from "@/states/transactions/reducer";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Chain } from "viem";
@@ -21,24 +19,19 @@ const TransactionWrapper = styled.div``;
 
 function Transaction({ l1, l2 }: Props) {
   const dispatch = useAppDispatch();
-  const deposits = useAppSelector((state) => state.deposit);
-  const withdrawals = useAppSelector((state) => state.withdrawal);
-  const [isOpen, setIsOpen] = useState(false);
   const { address } = useAccount();
   const [selectedTab, setSelectedTab] = useState(2);
+  const refresh = useAppSelector((state) => state.refresh.counter);
+
   useEffect(() => {
-    dispatch(
-      fetchDeposits({ page: 1, limit: 10, sender: address, receiver: address })
-    );
-    dispatch(
-      fetchWithdraws({ page: 1, limit: 10, sender: address, receiver: address })
-    );
-  }, [dispatch, address]);
+    if (address) {
+      dispatch(fetchTransactions({ address }));
+    }
+  }, [dispatch, address, refresh]);
 
-  const openTranactionDetail = () => {
-    dispatch(openPage("transaction detail"));
-  };
-
+  const depositsCompleted = useAppSelector(
+    (state) => state.transactions.depositTransaction
+  );
   return (
     <TransactionWrapper>
       <BoxContainer hasExit={true}>
@@ -190,7 +183,7 @@ function Transaction({ l1, l2 }: Props) {
               </div>
             </div>
           ) : (
-            deposits.items.map((item, index) => (
+            depositsCompleted.map((item, index) => (
               <TransactionItemDeposit key={index} data={item} l1={l1} l2={l2} />
             ))
           )}
