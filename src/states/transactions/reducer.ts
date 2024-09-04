@@ -241,6 +241,11 @@ export const fetchTransactions = createAsyncThunk(
       })
     );
 
+    withdrawalNeed.sort((a, b) => b.timestamp - a.timestamp);
+    depositNeed.sort((a, b) => b.timestamp - a.timestamp);
+    withdrawalTransaction.sort((a, b) => b.timestamp - a.timestamp);
+    depositTransaction.sort((a, b) => b.timestamp - a.timestamp);
+
     return {
       withdrawalNeed,
       depositNeed,

@@ -4,17 +4,18 @@ import { default as ETH } from '@/assets/eth.svg';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import { useInterval } from '@/hooks/useInterval';
 import { useAppSelector } from '@/states/hooks';
+import { depositType } from '@/states/transactions/reducer';
 import { formatSecsString } from '@/utils';
 import ENV from '@/utils/ENV';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Chain, formatUnits } from 'viem';
 
 interface Props extends SimpleComponent {
   l1: Chain;
   l2: Chain;
-  data: any;
+  data: depositType;
 }
 
 const TransactionItemWrapper = styled.div``;
@@ -34,13 +35,10 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
   const [timePassed, setTimePassed] = useState('');
 
   const timePassedInterval = () => {
-    const currentTime = new Date().getTime() / 1000;
+    const currentTime = new Date().getTime();
     const timePassed = currentTime - Number(data.timestamp);
-
-    setTimePassed(formatSecsString(timePassed));
+    setTimePassed(formatSecsString(timePassed / 1000));
   };
-
-  useInterval(timePassedInterval, 60000);
 
   const [isOpen, setIsOpen] = useState(false);
   const contentRef = useRef(null);
@@ -104,7 +102,7 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
             <div className="flex gap-2 items-center">
               <a
                 className="flex gap-2 items-center"
-                href={`${L1NetworkExplorerUrl}/tx/${data.transactionhash}`}
+                href={`${L1NetworkExplorerUrl}/tx/${data.transactionHash}`}
                 target="_blank"
                 rel="noreferrer noopener"
               >
@@ -183,10 +181,17 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
                 <div className="text-[#079455] text-sm font-semibold">
                   Deposited
                 </div>
-                <div className="text-[#1E61F2] text-sm font-medium flex gap-1 items-center">
-                  <div>Transaction</div>
-                  <Icon icon="ci:external-link" className="w-4 h-4" />
-                </div>
+                <a
+                  className="flex gap-2 items-center"
+                  href={`${L1NetworkExplorerUrl}/tx/${data.transactionHash}`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <div className="text-[#1E61F2] text-sm font-medium flex gap-1 items-center">
+                    <div>Transaction</div>
+                    <Icon icon="ci:external-link" className="w-4 h-4" />
+                  </div>
+                </a>
               </div>
             </div>
             <div className="border-l border-[#E4E7EC] h-3 translate-x-4" />
@@ -201,10 +206,17 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
                 <div className="text-[#079455] text-sm font-semibold">
                   L2 confirmation
                 </div>
-                <div className="text-[#1E61F2] text-sm font-medium flex gap-1 items-center">
-                  <div>Transaction</div>
-                  <Icon icon="ci:external-link" className="w-4 h-4" />
-                </div>
+                <a
+                  className="flex gap-2 items-center"
+                  href={`${L2NetworkExplorerUrl}/tx/${data.l2TxHash}`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <div className="text-[#1E61F2] text-sm font-medium flex gap-1 items-center">
+                    <div>Transaction</div>
+                    <Icon icon="ci:external-link" className="w-4 h-4" />
+                  </div>
+                </a>
               </div>
             </div>
           </div>

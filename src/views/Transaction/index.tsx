@@ -28,6 +28,8 @@ function Transaction({ l1, l2 }: Props) {
       dispatch(fetchTransactions({ address }));
     }
   }, [dispatch, address, refresh]);
+
+  const depositsCompleted = useAppSelector((state) => state.transactions.depositTransaction);
   return (
     <TransactionWrapper>
       <BoxContainer hasExit={true}>
@@ -59,7 +61,7 @@ function Transaction({ l1, l2 }: Props) {
             <div className="font-semibold">History</div>
           </div>
         </div>
-        {/* <div className="flex flex-col gap-4 mt-4 h-[30rem] overflow-scroll px-4">
+        <div className="flex flex-col gap-4 mt-4 h-[30rem] overflow-scroll px-4">
           {selectedTab === 1 ? (
             <div className="mt-3">
               <div className="rounded-xl bg-[#F9FAFB] border border-[#E4E7EC] p-3">
@@ -176,11 +178,11 @@ function Transaction({ l1, l2 }: Props) {
               </div>
             </div>
           ) : (
-            deposits.items.map((item, index) => (
+            depositsCompleted.map((item, index) => (
               <TransactionItemDeposit key={index} data={item} l1={l1} l2={l2} />
             ))
           )}
-        </div> */}
+        </div>
       </BoxContainer>
     </TransactionWrapper>
   );
