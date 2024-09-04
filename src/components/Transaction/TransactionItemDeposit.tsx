@@ -1,27 +1,27 @@
-import ChevronDown from "@/assets/chevron-down.svg";
-import CircleArrowDown from "@/assets/circle-arrow-down.svg";
-import { default as ETH } from "@/assets/eth.svg";
-import { useUsdtPrice } from "@/contexts/UsdtPriceContext";
-import { useInterval } from "@/hooks/useInterval";
-import { EventDeposit } from "@/states/deposit/reducer";
-import { formatSecsString } from "@/utils";
-import ENV from "@/utils/ENV";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { useRef, useState } from "react";
-import styled from "styled-components";
-import { Chain, formatUnits } from "viem";
+import ChevronDown from '@/assets/chevron-down.svg';
+import CircleArrowDown from '@/assets/circle-arrow-down.svg';
+import { default as ETH } from '@/assets/eth.svg';
+import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
+import { useInterval } from '@/hooks/useInterval';
+import { useAppSelector } from '@/states/hooks';
+import { formatSecsString } from '@/utils';
+import ENV from '@/utils/ENV';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import styled from 'styled-components';
+import { Chain, formatUnits } from 'viem';
 
 interface Props extends SimpleComponent {
   l1: Chain;
   l2: Chain;
-  data: EventDeposit;
+  data: any;
 }
 
 const TransactionItemWrapper = styled.div``;
 
 function TransactionItemDeposit({ l1, l2, data }: Props) {
   const amount = formatUnits(BigInt(data.amount), l1.nativeCurrency.decimals);
-
+  const refresh = useAppSelector((state) => state.refresh.counter);
   const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
 
   const getAmountUsdt = (+amount * (usdtPrice || 0)).toFixed(2);
@@ -31,7 +31,7 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
 
   const timeLocale = new Date(Number(data.timestamp)).toLocaleString();
 
-  const [timePassed, setTimePassed] = useState("");
+  const [timePassed, setTimePassed] = useState('');
 
   const timePassedInterval = () => {
     const currentTime = new Date().getTime() / 1000;
@@ -48,6 +48,10 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
   const toggleAccordion = () => {
     setIsOpen(!isOpen);
   };
+
+  useEffect(() => {
+    timePassedInterval();
+  }, [refresh]);
 
   return (
     <TransactionItemWrapper>
@@ -84,7 +88,7 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
               <img
                 src={ChevronDown}
                 alt=""
-                className={isOpen ? "rotate-180" : ""}
+                className={isOpen ? 'rotate-180' : ''}
               />
             </div>
           </div>
@@ -157,10 +161,13 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
         <div
           ref={contentRef}
           className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            isOpen ? "max-h-screen" : "max-h-0"
+            isOpen ? 'max-h-screen' : 'max-h-0'
           }`}
           style={{
-            maxHeight: isOpen ? contentRef.current.scrollHeight : "0px",
+            maxHeight:
+              isOpen && contentRef.current
+                ? (contentRef.current as any).scrollHeight
+                : '0px',
           }}
         >
           <div>
