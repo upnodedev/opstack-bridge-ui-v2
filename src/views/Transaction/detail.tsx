@@ -1,12 +1,9 @@
 import CircleArrowDown from "@/assets/circle-arrow-down.svg";
 import { default as ETH } from "@/assets/eth.svg";
 import BoxContainer from "@/components/Box/BoxContainer";
-import { fetchDeposits } from "@/states/deposit/reducer";
-import { useAppDispatch, useAppSelector } from "@/states/hooks";
-import { openPage } from "@/states/layout/reducer";
-import { fetchWithdraws } from "@/states/withdrawal/reducer";
+
+import { useAppDispatch } from "@/states/hooks";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useEffect } from "react";
 import styled from "styled-components";
 import { Chain } from "viem";
 import { useAccount } from "wagmi";
@@ -20,21 +17,7 @@ const TransactionDetailWrapper = styled.div``;
 
 function TransactionDetail({ l1, l2 }: Props) {
   const dispatch = useAppDispatch();
-  const deposits = useAppSelector((state) => state.deposit);
-  const withdrawals = useAppSelector((state) => state.withdrawal);
   const { address } = useAccount();
-  useEffect(() => {
-    dispatch(
-      fetchDeposits({ page: 1, limit: 10, sender: address, receiver: address })
-    );
-    dispatch(
-      fetchWithdraws({ page: 1, limit: 10, sender: address, receiver: address })
-    );
-  }, [dispatch, address]);
-
-  const openTranactionDetail = () => {
-    dispatch(openPage("transaction detail"));
-  };
 
   return (
     <TransactionDetailWrapper>

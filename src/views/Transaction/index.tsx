@@ -4,6 +4,7 @@ import { default as ETH } from "@/assets/eth.svg";
 import BoxContainer from "@/components/Box/BoxContainer";
 import TransactionItemDeposit from "@/components/Transaction/TransactionItemDeposit";
 import { useAppDispatch, useAppSelector } from "@/states/hooks";
+import { openPage } from "@/states/layout/reducer";
 import { fetchTransactions } from "@/states/transactions/reducer";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -22,6 +23,10 @@ function Transaction({ l1, l2 }: Props) {
   const { address } = useAccount();
   const [selectedTab, setSelectedTab] = useState(2);
   const refresh = useAppSelector((state) => state.refresh.counter);
+
+  const openTranactionDetail = () => {
+    dispatch(openPage("transaction detail"));
+  };
 
   useEffect(() => {
     if (address) {
