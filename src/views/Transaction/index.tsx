@@ -5,6 +5,7 @@ import BoxContainer from "@/components/Box/BoxContainer";
 import TransactionItemDeposit from "@/components/Transaction/TransactionItemDeposit";
 import { fetchDeposits } from "@/states/deposit/reducer";
 import { useAppDispatch, useAppSelector } from "@/states/hooks";
+import { openPage } from "@/states/layout/reducer";
 import { fetchWithdraws } from "@/states/withdrawal/reducer";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -33,6 +34,11 @@ function Transaction({ l1, l2 }: Props) {
       fetchWithdraws({ page: 1, limit: 10, sender: address, receiver: address })
     );
   }, [dispatch, address]);
+
+  const openTranactionDetail = () => {
+    dispatch(openPage("transaction detail"));
+  };
+
   return (
     <TransactionWrapper>
       <BoxContainer hasExit={true}>
@@ -174,7 +180,10 @@ function Transaction({ l1, l2 }: Props) {
                       Detail
                     </div>
                   </div>
-                  <button className="py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold">
+                  <button
+                    className="py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+                    onClick={openTranactionDetail}
+                  >
                     Prove
                   </button>
                 </div>

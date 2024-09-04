@@ -1,16 +1,17 @@
-import BoxAnimate from '@/components/Box/BoxAnimate';
-import Modal from '@/components/Modal';
-import { useOPNetwork } from '@/hooks/useOPNetwork';
-import { useOPTokens } from '@/hooks/useOPTokens';
-import { useAppSelector } from '@/states/hooks';
-import { Token } from '@/utils/opType';
-import { useCallback, useState } from 'react';
-import styled from 'styled-components';
-import { useAccount } from 'wagmi';
-import Bridge from './Bridge/Bridge';
-import ReviewDeposit from './Bridge/ReviewDeposit';
-import ReviewWithdrawal from './Bridge/ReviewWithdrawal';
-import Transaction from './Transaction';
+import BoxAnimate from "@/components/Box/BoxAnimate";
+import Modal from "@/components/Modal";
+import { useOPNetwork } from "@/hooks/useOPNetwork";
+import { useOPTokens } from "@/hooks/useOPTokens";
+import { useAppSelector } from "@/states/hooks";
+import { Token } from "@/utils/opType";
+import { useCallback, useState } from "react";
+import styled from "styled-components";
+import { useAccount } from "wagmi";
+import Bridge from "./Bridge/Bridge";
+import ReviewDeposit from "./Bridge/ReviewDeposit";
+import ReviewWithdrawal from "./Bridge/ReviewWithdrawal";
+import Transaction from "./Transaction";
+import TransactionDetail from "./Transaction/detail";
 
 interface Props extends SimpleComponent {}
 
@@ -44,7 +45,7 @@ function Mainview(props: Props) {
 
   return (
     <MainviewWrapper className="max-w-screen-sm w-full mx-auto relative">
-      <BoxAnimate isShow={page === 'bridgeDeposit'}>
+      <BoxAnimate isShow={page === "bridgeDeposit"}>
         <Bridge
           amount={amount}
           onAmountChange={onAmountChange}
@@ -54,8 +55,12 @@ function Mainview(props: Props) {
         />
       </BoxAnimate>
 
-      <BoxAnimate isShow={page === 'transaction'}>
+      <BoxAnimate isShow={page === "transaction"}>
         <Transaction l1={l1} l2={l2} />
+      </BoxAnimate>
+
+      <BoxAnimate isShow={page === "transaction detail"}>
+        <TransactionDetail l1={l1} l2={l2} />
       </BoxAnimate>
 
       <Modal modalId="reviewDeposit">
