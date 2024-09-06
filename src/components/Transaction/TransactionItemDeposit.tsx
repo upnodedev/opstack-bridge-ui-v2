@@ -2,7 +2,6 @@ import ChevronDown from '@/assets/chevron-down.svg';
 import CircleArrowDown from '@/assets/circle-arrow-down.svg';
 import { default as ETH } from '@/assets/eth.svg';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
-import { useInterval } from '@/hooks/useInterval';
 import { useAppSelector } from '@/states/hooks';
 import { depositType } from '@/states/transactions/reducer';
 import { formatSecsString } from '@/utils';
@@ -129,9 +128,9 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
                   <path
                     d="M7.5 15L12.5 10L7.5 5"
                     stroke="#1E61F2"
-                    stroke-width="1.66667"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.66667"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>

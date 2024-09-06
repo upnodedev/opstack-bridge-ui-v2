@@ -50,9 +50,9 @@ export interface EventItems extends Event {
 }
 
 interface TransactionType {
-  withdrawalNeed: withDrawalType[];
+  withdrawalNeed: withdrawalType[];
   depositNeed: depositType[];
-  withdrawalTransaction: withDrawalType[];
+  withdrawalTransaction: withdrawalType[];
   depositTransaction: depositType[];
   inProgressCount: number;
   actionRequiredCount: number;
@@ -61,7 +61,7 @@ interface TransactionType {
   error: string | null;
 }
 
-export interface withDrawalType {
+export interface withdrawalType {
   transactionHash: `0x${string}`;
   l1Token: string;
   l2Token: string;
@@ -123,10 +123,10 @@ export const fetchTransactions = createAsyncThunk(
       `${ENV.API_ENDPOINT}/transactions?${queryParams.toString()}`
     );
 
-    const withdrawalNeed: withDrawalType[] = [];
+    const withdrawalNeed: withdrawalType[] = [];
     const depositNeed: depositType[] = [];
 
-    const withdrawalTransaction: withDrawalType[] = [];
+    const withdrawalTransaction: withdrawalType[] = [];
     const depositTransaction: depositType[] = [];
 
     let inProgressCount = 0;
@@ -258,6 +258,29 @@ export const fetchTransactions = createAsyncThunk(
   }
 );
 
+const mergeAndSortTransactions = <T>(
+  existingTransactions: T[],
+  newTransactions: T[]
+): T[] => {
+  const mergedTransactions = [...existingTransactions];
+
+  newTransactions.forEach((newTx: any) => {
+    const index = mergedTransactions.findIndex(
+      (tx: any) => tx.transactionHash === newTx.transactionHash
+    );
+
+    if (index > -1) {
+      mergedTransactions[index] = newTx;
+    } else {
+      mergedTransactions.push(newTx);
+    }
+  });
+
+  return mergedTransactions.sort(
+    (a: any, b: any) => b.blockNumber - a.blockNumber
+  );
+};
+
 const transactionSlice = createSlice({
   name: 'transactions',
   initialState,
@@ -271,12 +294,25 @@ const transactionSlice = createSlice({
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.totalCount = action.payload.totalCount;
-        state.withdrawalNeed = action.payload.withdrawalNeed;
-        state.depositNeed = action.payload.depositNeed;
-        state.withdrawalTransaction = action.payload.withdrawalTransaction;
-        state.depositTransaction = action.payload.depositTransaction;
         state.inProgressCount = action.payload.inProgressCount;
         state.actionRequiredCount = action.payload.actionRequiredCount;
+
+        state.withdrawalNeed = mergeAndSortTransactions(
+          state.withdrawalNeed,
+          action.payload.withdrawalNeed
+        );
+        state.depositNeed = mergeAndSortTransactions(
+          state.depositNeed,
+          action.payload.depositNeed
+        );
+        state.withdrawalTransaction = mergeAndSortTransactions(
+          state.withdrawalTransaction,
+          action.payload.withdrawalTransaction
+        );
+        state.depositTransaction = mergeAndSortTransactions(
+          state.depositTransaction,
+          action.payload.depositTransaction
+        );
       })
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.status = 'failed';

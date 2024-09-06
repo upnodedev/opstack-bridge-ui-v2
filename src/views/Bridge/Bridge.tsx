@@ -1,6 +1,6 @@
 import BoxContainer from '@/components/Box/BoxContainer';
 import ENV from '@/utils/ENV';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import ButtonStyled from '@/components/Button/ButtonStyled';
 import ChainBox from '@/components/Bridge/ChainBox';
@@ -8,9 +8,9 @@ import DepositDetail from '@/components/Bridge/BridgeDetail';
 import PoweredBy from '@/components/PoweredBy';
 import { Token } from '@/utils/opType';
 import { useReadBalance } from '@/hooks/useReadBalance';
-import { Chain, parseEther } from 'viem';
+import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
-import { useAppDispatch } from '@/states/hooks';
+import { useAppDispatch, useAppSelector } from '@/states/hooks';
 import { openModal } from '@/states/modal/reducer';
 import { openPage } from '@/states/layout/reducer';
 import { l1Chain, l2Chain } from '@/utils/chain';
@@ -18,7 +18,6 @@ import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import { useSwitchNetworkDirection } from '@/hooks/useSwitchNetworkPair';
 import { useIsNetworkUnsupported } from '@/hooks/useIsNetworkUnsupported';
 import { default as ETH } from '@/assets/eth.svg';
-
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
@@ -34,6 +33,10 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
   const [type, setType] = useState<'withdrawal' | 'deposit'>('deposit');
   const [validationError, setValidationError] = useState<string | undefined>(
     undefined
+  );
+
+  const withdrawalNeed = useAppSelector(
+    (state) => state.transactions.withdrawalNeed
   );
 
   const [l1Token] = selectedTokenPair;
@@ -159,12 +162,14 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
 
           <button
             onClick={openTranaction}
-            className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] text-primary border-primary flex items-center justify-center gap-2`}
+            className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] text-primary border-primary flex items-center justify-center gap-2 hover:bg-slate-100`}
           >
             Activity
-            <div className="w-5 h-5 flex items-center justify-center text-center rounded-full bg-red-500 text-white text-xs">
-              1
-            </div>
+            {withdrawalNeed.length > 0 && (
+              <div className="animate-bounce w-5 h-5 flex items-center justify-center text-center rounded-full bg-red-500 text-white text-xs">
+                {withdrawalNeed.length}
+              </div>
+            )}
           </button>
         </div>
 

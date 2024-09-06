@@ -1,16 +1,17 @@
-import CircleArrowDown from "@/assets/circle-arrow-down.svg";
-import { default as ETH } from "@/assets/eth.svg";
-import BoxContainer from "@/components/Box/BoxContainer";
+import CircleArrowDown from '@/assets/circle-arrow-down.svg';
+import { default as ETH } from '@/assets/eth.svg';
+import BoxContainer from '@/components/Box/BoxContainer';
 
-import { useAppDispatch } from "@/states/hooks";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import styled from "styled-components";
-import { Chain } from "viem";
-import { useAccount } from "wagmi";
+import { useAppDispatch } from '@/states/hooks';
+import { Icon } from '@iconify/react/dist/iconify.js';
+import styled from 'styled-components';
+import { Chain } from 'viem';
+import { useAccount } from 'wagmi';
 
 interface Props extends SimpleComponent {
   l1: Chain;
   l2: Chain;
+  txHash: `0x${string}` | undefined;
 }
 
 const TransactionDetailWrapper = styled.div``;
@@ -21,7 +22,7 @@ function TransactionDetail({ l1, l2 }: Props) {
 
   return (
     <TransactionDetailWrapper>
-      <BoxContainer hasExit={true}>
+      <BoxContainer>
         <div className="text-gray-900 font-semibold text-lg">
           Transection Detail
         </div>
@@ -66,9 +67,9 @@ function TransactionDetail({ l1, l2 }: Props) {
                     <path
                       d="M2.5 6H9.5M9.5 6L6 2.5M9.5 6L6 9.5"
                       stroke="#F79009"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   </svg>
                 </div>
@@ -106,9 +107,9 @@ function TransactionDetail({ l1, l2 }: Props) {
                     <path
                       d="M7.5 15L12.5 10L7.5 5"
                       stroke="#1E61F2"
-                      stroke-width="1.66667"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="1.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   </svg>
                 </div>
@@ -192,7 +193,7 @@ function TransactionDetail({ l1, l2 }: Props) {
                 Wait 7 days
               </div>
               <div className="text-[#667085] text-sm font-medium flex gap-1 items-center">
-                You can view it on the{" "}
+                You can view it on the{' '}
                 <span className="text-[#1E61F2]">Transaction explorer </span>
                 page
               </div>
@@ -228,7 +229,7 @@ function TransactionDetail({ l1, l2 }: Props) {
               <path
                 d="M9.16667 3.33333H6.5C5.09987 3.33333 4.3998 3.33333 3.86502 3.60582C3.39462 3.8455 3.01217 4.22795 2.77248 4.69836C2.5 5.23314 2.5 5.9332 2.5 7.33333V11.6667C2.5 12.4416 2.5 12.8291 2.58519 13.147C2.81635 14.0098 3.49022 14.6836 4.35295 14.9148C4.67087 15 5.05836 15 5.83333 15V16.9463C5.83333 17.3903 5.83333 17.6123 5.92436 17.7263C6.00352 17.8255 6.12356 17.8832 6.25045 17.8831C6.39636 17.8829 6.56973 17.7442 6.91646 17.4668L8.90434 15.8765C9.31043 15.5517 9.51347 15.3892 9.73957 15.2737C9.94017 15.1712 10.1537 15.0963 10.3743 15.051C10.6231 15 10.8831 15 11.4031 15H12.6667C14.0668 15 14.7669 15 15.3016 14.7275C15.772 14.4878 16.1545 14.1054 16.3942 13.635C16.6667 13.1002 16.6667 12.4001 16.6667 11V10.8333M16.7678 3.23223C17.7441 4.20854 17.7441 5.79146 16.7678 6.76777C15.7915 7.74408 14.2085 7.74408 13.2322 6.76777C12.2559 5.79146 12.2559 4.20854 13.2322 3.23223C14.2085 2.25592 15.7915 2.25592 16.7678 3.23223Z"
                 stroke="url(#paint0_linear_4596_486)"
-                stroke-width="2"
+                strokeWidth="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
@@ -241,8 +242,8 @@ function TransactionDetail({ l1, l2 }: Props) {
                   y2="2.5"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop stop-color="#FA71CD" />
-                  <stop offset="1" stop-color="#C471F5" />
+                  <stop stopColor="#FA71CD" />
+                  <stop offset="1" stopColor="#C471F5" />
                 </linearGradient>
               </defs>
             </svg>
