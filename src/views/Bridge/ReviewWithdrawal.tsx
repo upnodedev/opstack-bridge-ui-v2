@@ -3,6 +3,9 @@ import ButtonStyled from '@/components/Button/ButtonStyled';
 import CheckBoxList from '@/components/Form/CheckBoxList';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import useDeposit from '@/hooks/useDeposit';
+import { useL1PublicClient } from '@/hooks/useL1PublicClient';
+import { useL2PublicClient } from '@/hooks/useL2PublicClient';
+import { useOPWagmiConfig } from '@/hooks/useOPWagmiConfig';
 import useWithdrawal from '@/hooks/useWithdrawal';
 import { useAppDispatch } from '@/states/hooks';
 import { closeModalAll } from '@/states/modal/reducer';
@@ -13,8 +16,10 @@ import { Token } from '@/utils/opType';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { useState } from 'react';
 import styled from 'styled-components';
-import { formatEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
+import { walletActionsL2 } from 'viem/op-stack';
 import { useAccount } from 'wagmi';
+import { getWalletClient } from 'wagmi/actions';
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
@@ -40,8 +45,13 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
     setConfirm(selected);
   };
 
+  const { l1PublicClient } = useL1PublicClient();
+  const { l2PublicClient } = useL2PublicClient();
+  const { opConfig } = useOPWagmiConfig();
+
   const submitDeposit = async () => {
     await onSubmitWithdrawal();
+
     dispatch(closeModalAll());
   };
 
@@ -83,7 +93,9 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
                   fontSize={'1.2rem'}
                   className="text-yellow-500"
                 />
-                <p className="text-gray-600">Wait ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}</p>
+                <p className="text-gray-600">
+                  Wait ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}
+                </p>
               </div>
             </div>
 
@@ -112,7 +124,9 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
                   fontSize={'1.2rem'}
                   className="text-yellow-500"
                 />
-                <p className="text-gray-600">Wait ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}</p>
+                <p className="text-gray-600">
+                  Wait ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}
+                </p>
               </div>
             </div>
 

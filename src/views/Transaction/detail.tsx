@@ -1,30 +1,308 @@
 import CircleArrowDown from '@/assets/circle-arrow-down.svg';
 import { default as ETH } from '@/assets/eth.svg';
 import BoxContainer from '@/components/Box/BoxContainer';
+import { StatusBadge } from '@/components/Transaction/StatusBadge';
+import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
+import { useL1PublicClient } from '@/hooks/useL1PublicClient';
+import { useL2PublicClient } from '@/hooks/useL2PublicClient';
+import { useOPWagmiConfig } from '@/hooks/useOPWagmiConfig';
+import { useSwitchNetworkDirection } from '@/hooks/useSwitchNetworkPair';
+import useWithdrawal from '@/hooks/useWithdrawal';
 
-import { useAppDispatch } from '@/states/hooks';
+import { useAppDispatch, useAppSelector } from '@/states/hooks';
+import {
+  fetchTransactions,
+  withdrawalType,
+} from '@/states/transactions/reducer';
+import { formatSecsString } from '@/utils';
+import ENV from '@/utils/ENV';
+import { Token } from '@/utils/opType';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Chain } from 'viem';
+import {
+  Chain,
+  formatEther,
+  formatUnits,
+  parseEther,
+  TransactionReceipt,
+} from 'viem';
+import { getWithdrawals, walletActionsL1 } from 'viem/op-stack';
 import { useAccount } from 'wagmi';
+import { getWalletClient } from 'wagmi/actions';
 
 interface Props extends SimpleComponent {
   l1: Chain;
   l2: Chain;
   txHash: `0x${string}` | undefined;
+  selectedTokenPair: [Token, Token];
 }
 
 const TransactionDetailWrapper = styled.div``;
 
-function TransactionDetail({ l1, l2 }: Props) {
+function StatusWithdrawal({
+  status,
+  transaction,
+  icon,
+  isLoading,
+  link,
+  iconClassName,
+  textClassName,
+  detailText,
+}: {
+  status: string;
+  link?: string;
+  transaction: withdrawalType;
+  icon: string;
+  isLoading?: boolean;
+  textClassName?: string;
+  iconClassName?: string;
+  detailText?: React.ReactNode;
+}) {
+  if (!link) {
+    return (
+      <div className="flex gap-2 items-center">
+        <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
+          <Icon
+            icon={icon}
+            className={`${iconClassName} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}
+          />
+          {isLoading && (
+            <Icon
+              icon={'line-md:loading-twotone-loop'}
+              className={`${iconClassName} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10`}
+            />
+          )}
+        </div>
+        <div>
+          <div className={`${textClassName} text-sm font-semibold`}>
+            {status}
+          </div>
+          {detailText}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <a
+      className="flex gap-2 items-center hover:opacity-80 relative"
+      href={link}
+      target="_blank"
+      rel="noreferrer noopener"
+    >
+      <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
+        <Icon
+          icon={icon}
+          className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        />
+        {isLoading && (
+          <Icon
+            icon={'line-md:loading-twotone-loop'}
+            className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10"
+          />
+        )}
+      </div>
+      <div>
+        <div className="text-blue-600 text-sm font-semibold">{status}</div>
+      </div>
+    </a>
+  );
+}
+
+function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
   const dispatch = useAppDispatch();
-  const { address } = useAccount();
+  const { chain, address } = useAccount();
+  const refresh = useAppSelector((state) => state.refresh.counter);
+  const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
+
+  const L1NetworkExplorerUrl = l1.blockExplorers?.default.url;
+  const L2NetworkExplorerUrl = l2.blockExplorers?.default.url;
+
+  const transaction = useAppSelector((state) => {
+    const tx = state.transactions.withdrawalNeed.find(
+      (item) => item.transactionHash === txHash
+    );
+    if (!tx) {
+      return state.transactions.withdrawalTransaction.find(
+        (item) => item.transactionHash === txHash
+      );
+    }
+    return tx;
+  });
+
+  const timeLocale = new Date(
+    Number(transaction!.timestamp)
+  ).toLocaleDateString();
+
+  const [timePassed, setTimePassed] = useState('');
+
+  const timePassedInterval = () => {
+    const currentTime = new Date().getTime();
+    const timePassed = currentTime - Number(transaction!.timestamp);
+    setTimePassed(formatSecsString(timePassed / 1000));
+  };
+
+  const amount = formatUnits(
+    BigInt(transaction!.amount),
+    l2.nativeCurrency.decimals
+  );
+  const getAmountUsdt = (+amount * (usdtPrice || 0)).toFixed(2);
+
+  useEffect(() => {
+    timePassedInterval();
+  }, [refresh]);
+
+  const [receipt, setReceipt] = useState<TransactionReceipt>();
+  const { opConfig } = useOPWagmiConfig();
+
+  const { l2PublicClient } = useL2PublicClient();
+  const { l1PublicClient } = useL1PublicClient();
+
+  const prove = async () => {
+    if (!opConfig) return;
+    if (!receipt) return;
+    const L1walletClient = (
+      await getWalletClient(opConfig, {
+        chainId: l1PublicClient.chain.id,
+      })
+    ).extend(walletActionsL1());
+    const { output, withdrawal } = await l1PublicClient.waitToProve({
+      receipt: receipt,
+      targetChain: l2PublicClient.chain,
+      chain: undefined,
+    });
+
+    // 2. Build parameters to prove the withdrawal on the L2.
+    const args = await l2PublicClient.buildProveWithdrawal({
+      output,
+      withdrawal,
+      chain: l2PublicClient.chain,
+    });
+
+    // 3. Prove the withdrawal on the L1.
+    const hash = await L1walletClient.proveWithdrawal(args);
+
+    // 4. Wait until the prove withdrawal is processed.
+    await l1PublicClient.waitForTransactionReceipt({
+      hash,
+    });
+
+    dispatch(fetchTransactions({ address: address! }));
+  };
+
+  const finalize = async () => {
+    if (!opConfig) return;
+    if (!receipt) return;
+    const L1walletClient = (
+      await getWalletClient(opConfig, {
+        chainId: l1PublicClient.chain.id,
+      })
+    ).extend(walletActionsL1());
+
+    // (Shortcut) Get withdrawals from receipt in Step 3.
+    const [withdrawal] = getWithdrawals({ logs: receipt.logs });
+
+    // 1. Wait until the withdrawal is ready to finalize.
+    await l1PublicClient.waitToFinalize({
+      targetChain: l2PublicClient.chain,
+      withdrawalHash: withdrawal.withdrawalHash,
+      chain: undefined,
+    });
+
+    // 2. Finalize the withdrawal.
+    const hash = await L1walletClient.finalizeWithdrawal({
+      targetChain: l2PublicClient.chain,
+      withdrawal,
+    });
+
+    // 3. Wait until the finalize withdrawal is processed.
+    await l1PublicClient.waitForTransactionReceipt({
+      hash,
+    });
+
+    dispatch(fetchTransactions({ address: address! }));
+  };
+
+  const getReceipt = async () => {
+    if (!transaction) return;
+    const receipt = await l2PublicClient
+      .getTransactionReceipt({
+        hash: transaction.transactionHash as AddressType,
+      })
+      .catch((error) => {});
+    if (receipt) {
+      setReceipt(receipt);
+    }
+  };
+
+  useEffect(() => {
+    getReceipt();
+  }, []);
+
+  const getTimimg = async () => {
+    if (!opConfig) return;
+    if (!receipt) return;
+    const [message] = getWithdrawals(receipt);
+    const { period, seconds, timestamp } =
+      await l1PublicClient.getTimeToFinalize({
+        targetChain: l2PublicClient.chain,
+        withdrawalHash: message.withdrawalHash,
+        chain: undefined,
+      });
+    console.log('ok');
+    console.log({ period, seconds, timestamp });
+  };
+
+  useEffect(() => {
+    getTimimg();
+  }, []);
+
+  const { switchNetworkPair: switchToL1 } = useSwitchNetworkDirection({
+    direction: 'l1',
+  });
+
+  const getTransferTime = () => {
+    const transferTimeTimeSecs = ENV.WITHDRAWAL_PERIOD + ENV.STATE_ROOT_PERIOD;
+    return formatSecsString(transferTimeTimeSecs);
+  };
+
+  const buttonAction = () => {
+    if (!transaction) return;
+    if (l1.id !== chain?.id) {
+      return (
+        <button
+          onClick={() => switchToL1()}
+          className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+        >
+          Switch to {l1.name}
+        </button>
+      );
+    }
+    if (transaction?.status === 'ready-to-prove')
+      return (
+        <button
+          onClick={prove}
+          className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+        >
+          Prove
+        </button>
+      );
+    if (transaction?.status === 'ready-to-finalize')
+      return (
+        <button
+          onClick={finalize}
+          className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+        >
+          Finalize
+        </button>
+      );
+  };
 
   return (
     <TransactionDetailWrapper>
       <BoxContainer>
         <div className="text-gray-900 font-semibold text-lg">
-          Transection Detail
+          Transaction Detail
         </div>
         <div className="mt-3">
           <div className="rounded-xl bg-[#F9FAFB] border border-[#E4E7EC] p-3">
@@ -48,53 +326,34 @@ function TransactionDetail({ l1, l2 }: Props) {
                     Withdraw
                   </div>
                   <div className="text-gray-500 text-xs mt-1.5">
-                    3 May 2024 (8 hours 1 mins ago)
+                    {timeLocale} ({timePassed} ago)
                   </div>
                 </div>
               </div>
               <div>
-                <div className="flex gap-1 items-center rounded-full bg-yellow-50 border border-yellow-200 pl-2 py-.5 pr-1">
-                  <div className="text-yellow-700 font-semibold text-xs">
-                    Finalize
-                  </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                  >
-                    <path
-                      d="M2.5 6H9.5M9.5 6L6 2.5M9.5 6L6 9.5"
-                      stroke="#F79009"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
+                <StatusBadge noIcon={true} status={transaction!.status} />
               </div>
             </div>
             <div className="mt-2 flex justify-between items-center">
               <div>
                 <div className="text-gray-900 font-semibold text-sm">
-                  2,211.21 ETH
+                  {amount} {l2.nativeCurrency.symbol}
                 </div>
                 <div className="text-gray-500 font-normal text-xs">
-                  $2,867,338.71
+                  $ {getAmountUsdt}
                 </div>
               </div>
               <div className="flex gap-2 items-center">
                 <div className="relative">
                   <div className="w-5 h-5 rounded-full border border-[#EAECF0] bg-white"></div>
                   <img
-                    src={ETH}
+                    src={ENV.L2_LOGO_URL}
                     alt=""
                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3"
                   />
                 </div>
                 <div className="text-gray-500 text-xs font-semibold">
-                  Ethereum
+                  {ENV.L2_CHAIN_NAME}
                 </div>
                 <div>
                   <svg
@@ -116,107 +375,82 @@ function TransactionDetail({ l1, l2 }: Props) {
                 <div className="relative">
                   <div className="w-5 h-5 rounded-full border border-[#EAECF0] bg-white"></div>
                   <img
-                    src={ETH}
+                    src={ENV.L1_LOGO_URL}
                     alt=""
                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3"
                   />
                 </div>
                 <div className="text-gray-500 text-xs font-semibold">
-                  Optimism
+                  {ENV.L2_CHAIN_NAME}
                 </div>
               </div>
             </div>
           </div>
         </div>
         <div className="my-3">
-          <div className="flex gap-3 items-center">
-            <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
-              <Icon
-                icon="lucide:send"
-                className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              />
-            </div>
-            <div>
-              <div className="text-blue-600 text-sm font-semibold">
-                Deposited
-              </div>
-              <div className="text-[#667085] text-sm font-medium flex gap-1 items-center">
-                <div>Fee est: $0.00</div>
-              </div>
-            </div>
-          </div>
+          <StatusWithdrawal
+            status="Withdrawn"
+            link={`${L2NetworkExplorerUrl}/tx/${transaction!.transactionHash}`}
+            transaction={transaction!}
+            icon={'lucide:send'}
+            textClassName="text-primary"
+            iconClassName="text-primary"
+          />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
-          <div className="flex gap-3 items-center">
-            <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
-              <Icon
-                icon="lucide:timer"
-                className="text-[#98A2B3] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              />
-            </div>
-            <div>
-              <div className="text-[#667085] text-sm font-semibold">
-                L2 confirmation
+          <StatusWithdrawal
+            status="State root published"
+            transaction={transaction!}
+            icon={'lucide:timer'}
+            isLoading={transaction?.status === 'waiting-to-prove'}
+            textClassName="text-green-600"
+            iconClassName="text-green-600"
+            detailText={
+              <div className="text-gray-500 text-xs font-semibold">
+                {' '}
+                ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}
               </div>
-              <div className="text-[#1E61F2] text-sm font-medium flex gap-1 items-center">
-                <div>Learn more</div>
-                <Icon icon="ci:external-link" className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
+            }
+          />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
-          <div className="flex gap-3 items-center">
-            <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
-              <Icon
-                icon="mingcute:loading-3-line"
-                className="text-[#1E61F2] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              />
-            </div>
-            <div>
-              <div className="text-[#1E61F2] text-sm font-semibold">
-                Prove withdrawal
-              </div>
-              <div className="text-[#667085] text-sm font-medium flex gap-1 items-center">
-                <div>Fee est: $15.00</div>
-              </div>
-            </div>
-          </div>
+          <StatusWithdrawal
+            status="Prove"
+            transaction={transaction!}
+            icon={'icon-park-solid:transaction-order'}
+            isLoading={false}
+            textClassName="text-primary"
+            iconClassName="text-primary"
+            link={
+              transaction?.prove
+                ? `${L1NetworkExplorerUrl}/tx/${transaction.prove.transactionHash}`
+                : undefined
+            }
+          />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
-          <div className="flex gap-3 items-center">
-            <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
-              <Icon
-                icon="lucide:calendar"
-                className="text-[#079455] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              />
-            </div>
-            <div>
-              <div className="text-[#079455] text-sm font-semibold">
-                Wait 7 days
+          <StatusWithdrawal
+            status="Challenge period"
+            transaction={transaction!}
+            icon={'lucide:calendar'}
+            isLoading={transaction?.status === 'waiting-to-finalize'}
+            textClassName="text-green-600"
+            iconClassName="text-green-600"
+            detailText={
+              <div className="text-gray-500 text-xs font-semibold">
+                {' '}
+                ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}
               </div>
-              <div className="text-[#667085] text-sm font-medium flex gap-1 items-center">
-                You can view it on the{' '}
-                <span className="text-[#1E61F2]">Transaction explorer </span>
-                page
-              </div>
-            </div>
-          </div>
+            }
+          />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
-          <div className="flex gap-3 items-center">
-            <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
-              <Icon
-                icon="lucide:star"
-                className="text-[#98A2B3] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              />
-            </div>
-            <div>
-              <div className="text-[#667085] text-sm font-semibold">
-                Claim withdrawal
-              </div>
-              <div className="text-[#667085] text-sm font-medium flex gap-1 items-center">
-                Fee est: $0.00
-              </div>
-            </div>
-          </div>
+          <StatusWithdrawal
+            status="Claim withdrawal"
+            transaction={transaction!}
+            icon={'lucide:star'}
+            isLoading={false}
+            textClassName="text-primary"
+            iconClassName="text-primary"
+          />
         </div>
+
         <div className="border border-[#DA72E6] rounded-md bg-[#F9C3E02B] p-3 mb-3">
           <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#FA71CD] to-[#C471F5] flex gap-1.5 items-center">
             <svg
@@ -255,14 +489,13 @@ function TransactionDetail({ l1, l2 }: Props) {
             placeholder="Enter your email"
           />
         </div>
-        <div className="text-xs text-center text-[#667085]">
-          You can safely close this modal and check back later
-        </div>
-        <div className="w-full text-end">
-          <button className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold">
-            Prove
-          </button>
-        </div>
+
+        {transaction?.status !== 'finalized' && (
+          <div className="text-xs text-center text-[#667085]">
+            You can safely close this modal and check back later
+          </div>
+        )}
+        <div className="w-full text-end">{buttonAction()}</div>
       </BoxContainer>
     </TransactionDetailWrapper>
   );

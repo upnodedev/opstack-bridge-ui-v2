@@ -132,114 +132,110 @@ export const fetchTransactions = createAsyncThunk(
     let inProgressCount = 0;
     let actionRequiredCount = 0;
 
-    await Promise.all<EventItems>(
-      response.data.transactions.map(async (item: Event) => {
-        if (item.transactionType === 'withdrawal') {
-          let status: statusTransaction = 'pending';
-          const receipt = await l2PublicClient
-            .getTransactionReceipt({
-              hash: item.transactionHash,
-            })
-            .catch(() => {
-              status = 'reverted';
-            });
+    // write for const transaction of response.data.transactions
 
-          const block = await l2PublicClient.getBlock({
-            blockNumber: BigInt(item.blockNumber),
+    for (const item of response.data.transactions) {
+      if (item.transactionType === 'withdrawal') {
+        let status: statusTransaction = 'pending';
+        const receipt = await l2PublicClient
+          .getTransactionReceipt({
+            hash: item.transactionHash,
+          })
+          .catch(() => {
+            status = 'reverted';
           });
-          // console.log({block})
-          const timestamp = block.timestamp * 1000n;
-          if (receipt) {
-            try {
-              const withdrawalStatus = await l1PublicClient.getWithdrawalStatus(
-                {
-                  receipt,
-                  targetChain: l2PublicClient.chain,
-                  chain: l1PublicClient.chain,
-                }
-              );
-              status = !receipt.transactionIndex
-                ? 'reverted'
-                : withdrawalStatus;
-            } catch (error) {
-              console.log({ error });
-              status = 'reverted';
-            }
-          }
 
-          const tx = {
-            transactionHash: item.transactionHash,
-            l1Token: item.remoteToken,
-            l2Token: item.localToken,
-            from: item.sender,
-            to: item.receiver,
-            amount: item.amount,
-            extraData: item.extraData,
-            blockNumber: item.blockNumber,
-            address: item.addressContract,
-            prove: item.prove,
-            finalize: item.finalize,
-            timestamp: Number(timestamp),
-            status,
-          };
-
-          if (tx.status !== 'finalized') {
-            withdrawalNeed.push(tx);
-            actionRequiredCount++;
-          } else {
-            withdrawalTransaction.push(tx);
-          }
-        } else {
-          let status: statusTransaction = 'pending';
-          let l2TxHash = '';
-          const receipt = await l1PublicClient
-            .getTransactionReceipt({
-              hash: item.transactionHash,
-            })
-            .catch(() => {
-              status = 'reverted';
+        const block = await l2PublicClient.getBlock({
+          blockNumber: BigInt(item.blockNumber),
+        });
+        // console.log({block})
+        const timestamp = block.timestamp * 1000n;
+        if (receipt) {
+          try {
+            const withdrawalStatus = await l1PublicClient.getWithdrawalStatus({
+              receipt,
+              targetChain: l2PublicClient.chain,
+              chain: l1PublicClient.chain,
             });
-
-          const block = await l1PublicClient.getBlock({
-            blockNumber: BigInt(item.blockNumber),
-          });
-          // console.log({block})
-          const timestamp = block.timestamp * 1000n;
-
-          if (receipt) {
-            const [log] = extractTransactionDepositedLogs(receipt);
-            const l2Hash = getL2TransactionHash({ log });
-            if (l2Hash) {
-              l2TxHash = l2Hash;
-              status = 'success';
-            }
-          }
-          const tx = {
-            transactionHash: item.transactionHash,
-            from: item.sender,
-            to: item.receiver,
-            amount: item.amount,
-            isEth: item.isEth,
-            extraData: item.extraData,
-            remoteToken: item.remoteToken,
-            localToken: item.localToken,
-            blockNumber: item.blockNumber,
-            addressContract: item.addressContract,
-            version: item.version,
-            timestamp: Number(timestamp),
-            status,
-            l2TxHash,
-          };
-
-          if (!tx.l2TxHash || tx.status === 'pending') {
-            depositNeed.push(tx);
-            inProgressCount++;
-          } else {
-            depositTransaction.push(tx);
+            status = !receipt.transactionIndex ? 'reverted' : withdrawalStatus;
+          } catch (error) {
+            console.log({ error });
+            status = 'reverted';
           }
         }
-      })
-    );
+
+        const tx = {
+          transactionHash: item.transactionHash,
+          l1Token: item.remoteToken,
+          l2Token: item.localToken,
+          from: item.sender,
+          to: item.receiver,
+          amount: item.amount,
+          extraData: item.extraData,
+          blockNumber: item.blockNumber,
+          address: item.addressContract,
+          prove: item.prove,
+          finalize: item.finalize,
+          timestamp: Number(timestamp),
+          status,
+        };
+
+        if (tx.status !== 'finalized') {
+          withdrawalNeed.push(tx);
+          actionRequiredCount++;
+        } else {
+          withdrawalTransaction.push(tx);
+        }
+      } else {
+        let status: statusTransaction = 'pending';
+        let l2TxHash = '';
+        const receipt = await l1PublicClient
+          .getTransactionReceipt({
+            hash: item.transactionHash,
+          })
+          .catch(() => {
+            status = 'reverted';
+          });
+
+        const block = await l1PublicClient.getBlock({
+          blockNumber: BigInt(item.blockNumber),
+        });
+        // console.log({block})
+        const timestamp = block.timestamp * 1000n;
+
+        if (receipt) {
+          const [log] = extractTransactionDepositedLogs(receipt);
+          const l2Hash = getL2TransactionHash({ log });
+          if (l2Hash) {
+            l2TxHash = l2Hash;
+            status = 'success';
+          }
+        }
+        const tx = {
+          transactionHash: item.transactionHash,
+          from: item.sender,
+          to: item.receiver,
+          amount: item.amount,
+          isEth: item.isEth,
+          extraData: item.extraData,
+          remoteToken: item.remoteToken,
+          localToken: item.localToken,
+          blockNumber: item.blockNumber,
+          addressContract: item.addressContract,
+          version: item.version,
+          timestamp: Number(timestamp),
+          status,
+          l2TxHash,
+        };
+
+        if (!tx.l2TxHash || tx.status === 'pending') {
+          depositNeed.push(tx);
+          inProgressCount++;
+        } else {
+          depositTransaction.push(tx);
+        }
+      }
+    }
 
     withdrawalNeed.sort((a, b) => b.timestamp - a.timestamp);
     depositNeed.sort((a, b) => b.timestamp - a.timestamp);
@@ -258,33 +254,22 @@ export const fetchTransactions = createAsyncThunk(
   }
 );
 
-const mergeAndSortTransactions = <T>(
-  existingTransactions: T[],
-  newTransactions: T[]
-): T[] => {
-  const mergedTransactions = [...existingTransactions];
-
-  newTransactions.forEach((newTx: any) => {
-    const index = mergedTransactions.findIndex(
-      (tx: any) => tx.transactionHash === newTx.transactionHash
-    );
-
-    if (index > -1) {
-      mergedTransactions[index] = newTx;
-    } else {
-      mergedTransactions.push(newTx);
-    }
-  });
-
-  return mergedTransactions.sort(
-    (a: any, b: any) => b.blockNumber - a.blockNumber
-  );
-};
-
 const transactionSlice = createSlice({
   name: 'transactions',
   initialState,
-  reducers: {},
+  reducers: {
+    resetTransaction: (state) => {
+      state.withdrawalNeed = [];
+      state.depositNeed = [];
+      state.withdrawalTransaction = [];
+      state.depositTransaction = [];
+      state.inProgressCount = 0;
+      state.actionRequiredCount = 0;
+      state.totalCount = 0;
+      state.status = 'idle';
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchTransactions.pending, (state) => {
@@ -297,22 +282,10 @@ const transactionSlice = createSlice({
         state.inProgressCount = action.payload.inProgressCount;
         state.actionRequiredCount = action.payload.actionRequiredCount;
 
-        state.withdrawalNeed = mergeAndSortTransactions(
-          state.withdrawalNeed,
-          action.payload.withdrawalNeed
-        );
-        state.depositNeed = mergeAndSortTransactions(
-          state.depositNeed,
-          action.payload.depositNeed
-        );
-        state.withdrawalTransaction = mergeAndSortTransactions(
-          state.withdrawalTransaction,
-          action.payload.withdrawalTransaction
-        );
-        state.depositTransaction = mergeAndSortTransactions(
-          state.depositTransaction,
-          action.payload.depositTransaction
-        );
+        state.withdrawalNeed = [...action.payload.withdrawalNeed];
+        state.depositNeed = [...action.payload.depositNeed];
+        state.withdrawalTransaction = [...action.payload.withdrawalTransaction];
+        state.depositTransaction = [...action.payload.depositTransaction];
       })
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.status = 'failed';
@@ -321,6 +294,6 @@ const transactionSlice = createSlice({
   },
 });
 
-// export const {} = transactionSlice.actions;
+export const { resetTransaction } = transactionSlice.actions;
 
 export default transactionSlice.reducer;

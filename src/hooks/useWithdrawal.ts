@@ -1,18 +1,14 @@
-import {
-  useAccount,
-  useEstimateFeesPerGas,
-  useEstimateGas,
-  usePublicClient,
-} from 'wagmi';
+import { useAccount, useEstimateFeesPerGas, useEstimateGas } from 'wagmi';
 import { useOPWagmiConfig } from './useOPWagmiConfig';
 import { Chain, encodeFunctionData, Hash, parseEther, parseUnits } from 'viem';
 import { l1StandardBridgeABI, l2StandardBridgeABI } from '@/abi/constant';
 import { ERC20_DEPOSIT_MIN_GAS_LIMIT } from '@/utils';
 import { Token } from '@/utils/opType';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOPNetwork } from './useOPNetwork';
 import { useWriteDepositETH } from './useWriteDepositETH';
 import { useWriteWithdrawETH } from './useWriteWithdrawalETH';
+import { useL2PublicClient } from './useL2PublicClient';
 
 type paramsArg = {
   address: `0x${string}` | undefined;
@@ -34,7 +30,7 @@ const useWithdrawal = ({ amount, selectedTokenPair, address }: paramsArg) => {
   const { l1, l2 } = networkPair;
 
   const l2Chains = opConfig?.l2chains;
-  const l2PublicClient = usePublicClient({ chainId: l2.id });
+  const { l2PublicClient } = useL2PublicClient();
 
   const txData = useMemo(() => {
     if (!l2Chains) {

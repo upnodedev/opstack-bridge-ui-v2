@@ -24,7 +24,7 @@ function Layout(props: Props) {
   const refreshing = () => {
     dispatch(increaseRefresh());
   };
-  useInterval(refreshing, 10000);
+  useInterval(refreshing, 30000);
   return (
     <LayoutWrapper>
       {/* header */}

@@ -45,6 +45,7 @@ function Mainview(props: Props) {
   };
 
   const onClickDetail = (txHash: `0x${string}`) => {
+    console.log('txHash', txHash);
     setTxHash(txHash);
     dispatch(openModal('transactionDetail'));
   };
@@ -68,7 +69,12 @@ function Mainview(props: Props) {
       </BoxAnimate>
 
       <Modal modalId="transactionDetail">
-        <TransactionDetail l1={l1} l2={l2} txHash={txHash} />
+        <TransactionDetail
+          l1={l1}
+          l2={l2}
+          txHash={txHash}
+          selectedTokenPair={selectedTokenPair}
+        />
       </Modal>
 
       <Modal modalId="reviewDeposit">

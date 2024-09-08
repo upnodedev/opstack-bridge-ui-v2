@@ -1,12 +1,8 @@
-import CircleArrowDown from '@/assets/circle-arrow-down.svg';
-import { default as ETH } from '@/assets/eth.svg';
 import BoxContainer from '@/components/Box/BoxContainer';
 import TransactionItemDeposit from '@/components/Transaction/TransactionItemDeposit';
 import TransactionWithdrawal from '@/components/Transaction/TransactionWithdrawal';
 import { useAppDispatch, useAppSelector } from '@/states/hooks';
-import { openPage } from '@/states/layout/reducer';
-import { fetchTransactions } from '@/states/transactions/reducer';
-import { Icon } from '@iconify/react/dist/iconify.js';
+import { fetchTransactions, resetTransaction } from '@/states/transactions/reducer';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Chain } from 'viem';
@@ -29,9 +25,10 @@ function Transaction({ l1, l2, onClickDetail }: Props) {
   const [type, setType] = useState<'withdrawal' | 'deposit'>('deposit');
 
   useEffect(() => {
-    console.log('fetch', { address, isConnected });
     if (address && isConnected) {
       dispatch(fetchTransactions({ address }));
+    }else{
+      dispatch(resetTransaction());
     }
   }, [dispatch, address, refresh, isConnected]);
 
@@ -39,10 +36,10 @@ function Transaction({ l1, l2, onClickDetail }: Props) {
 
   const ItemContainter = () => {
     if (selectedTab === 1) {
-      return transaction.withdrawalNeed.map((item, index) => (
+      return transaction.withdrawalNeed.map((item) => (
         <TransactionWithdrawal
           onClickDetail={onClickDetail}
-          key={index}
+          key={item.transactionHash}
           data={item}
           l1={l1}
           l2={l2}
@@ -50,18 +47,18 @@ function Transaction({ l1, l2, onClickDetail }: Props) {
       ));
     }
     if (selectedTab === 2 && type === 'withdrawal') {
-      return transaction.withdrawalTransaction.map((item, index) => (
+      return transaction.withdrawalTransaction.map((item) => (
         <TransactionWithdrawal
           onClickDetail={onClickDetail}
-          key={index}
+          key={item.transactionHash}
           data={item}
           l1={l1}
           l2={l2}
         />
       ));
     }
-    return transaction.depositTransaction.map((item, index) => (
-      <TransactionItemDeposit key={index} data={item} l1={l1} l2={l2} />
+    return transaction.depositTransaction.map((item) => (
+      <TransactionItemDeposit key={item.transactionHash} data={item} l1={l1} l2={l2} />
     ));
   };
 

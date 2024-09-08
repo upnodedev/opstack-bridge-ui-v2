@@ -22,7 +22,6 @@ interface Props extends SimpleComponent {
 const TransactionWithdrawalWrapper = styled.div``;
 
 function TransactionWithdrawal({ l1, l2, data, onClickDetail }: Props) {
-  const dispatch = useAppDispatch();
   const amount = formatUnits(BigInt(data.amount), l2.nativeCurrency.decimals);
   const refresh = useAppSelector((state) => state.refresh.counter);
   const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
@@ -74,9 +73,7 @@ function TransactionWithdrawal({ l1, l2, data, onClickDetail }: Props) {
               </div>
             </div>
             <div>
-              <div className="flex gap-1 items-center rounded-full bg-yellow-50 border border-yellow-200 pl-2 py-.5 pr-1">
-                <StatusBadge status={data.status} />
-              </div>
+              <StatusBadge status={data.status} />
             </div>
           </div>
           <div className="mt-2 flex justify-between items-center">
@@ -126,7 +123,7 @@ function TransactionWithdrawal({ l1, l2, data, onClickDetail }: Props) {
                 />
               </div>
               <div className="text-gray-500 text-xs font-semibold">
-                {ENV.L2_CHAIN_NAME}
+                {ENV.L1_CHAIN_NAME}
               </div>
             </div>
           </div>
@@ -143,9 +140,26 @@ function TransactionWithdrawal({ l1, l2, data, onClickDetail }: Props) {
                 Detail
               </div>
             </div>
-            <button className="py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold">
-              Prove
-            </button>
+            {data?.status === 'ready-to-prove' && (
+              <button
+                onClick={() => {
+                  onClickDetail(data.transactionHash);
+                }}
+                className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+              >
+                Prove
+              </button>
+            )}
+            {data?.status === 'ready-to-finalize' && (
+              <button
+                onClick={() => {
+                  onClickDetail(data.transactionHash);
+                }}
+                className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+              >
+                Finalize
+              </button>
+            )}
           </div>
         </div>
       </div>

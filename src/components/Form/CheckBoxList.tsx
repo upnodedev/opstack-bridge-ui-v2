@@ -20,6 +20,7 @@ function CheckBoxList(props: Props) {
     props.onAllSelected(temp.every((item) => item));
   };
 
+
   return (
     <CheckBoxListWrapper>
       <div className="flex flex-col gap-2">
@@ -29,8 +30,8 @@ function CheckBoxList(props: Props) {
             onChange={(e) => onChangeCheck(e, index)}
             className="flex items-start gap-2"
           >
-            <input type="checkbox" className="mt-1" />
-            <p className="text-sm text-gray-700">{item}</p>
+            <input id={`check-${index}`} type="checkbox" className="mt-1" />
+            <label htmlFor={`check-${index}`} className="text-sm text-gray-700">{item}</label>
           </div>
         ))}
       </div>
