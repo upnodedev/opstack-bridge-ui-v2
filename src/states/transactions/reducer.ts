@@ -36,17 +36,15 @@ export interface Event {
   transactionType: 'deposit' | 'withdrawal';
   prove?: Prove;
   finalize?: Prove;
+  blockTimestamp: string;
+  l2TransactionHash: string;
 }
 
 interface Prove {
   transactionHash: `0x${string}`;
   blockNumber: string;
   createdAt: string;
-}
-
-export interface EventItems extends Event {
-  timestamp: number;
-  status: statusTransaction;
+  blockTimestamp: string;
 }
 
 interface TransactionType {
@@ -129,39 +127,43 @@ export const fetchTransactions = createAsyncThunk(
     const withdrawalTransaction: withdrawalType[] = [];
     const depositTransaction: depositType[] = [];
 
-    let inProgressCount = 0;
     let actionRequiredCount = 0;
 
     // write for const transaction of response.data.transactions
 
-    for (const item of response.data.transactions) {
+    for (const item of response.data.transactions as Event[]) {
       if (item.transactionType === 'withdrawal') {
         let status: statusTransaction = 'pending';
-        const receipt = await l2PublicClient
-          .getTransactionReceipt({
-            hash: item.transactionHash,
-          })
-          .catch(() => {
-            status = 'reverted';
-          });
+        const STATE_ROOT_PERIOD = ENV.STATE_ROOT_PERIOD * 1000;
+        const PROVE_PERIOD = ENV.WITHDRAWAL_PERIOD * 1000;
 
-        const block = await l2PublicClient.getBlock({
-          blockNumber: BigInt(item.blockNumber),
-        });
-        // console.log({block})
-        const timestamp = block.timestamp * 1000n;
-        if (receipt) {
-          try {
-            const withdrawalStatus = await l1PublicClient.getWithdrawalStatus({
-              receipt,
-              targetChain: l2PublicClient.chain,
-              chain: l1PublicClient.chain,
-            });
-            status = !receipt.transactionIndex ? 'reverted' : withdrawalStatus;
-          } catch (error) {
-            console.log({ error });
-            status = 'reverted';
+        // console.log({ prove: item.prove, finalize: item.finalize });
+
+        if (!item.prove && !item.finalize) {
+          // check if the transaction is waiting to prove
+          const currentTimestamp = new Date().getTime();
+          const blockTimestamp = Number(item.blockTimestamp);
+          // console.log({ currentTimestamp, blockTimestamp });
+
+          if (currentTimestamp > blockTimestamp + STATE_ROOT_PERIOD) {
+            status = 'ready-to-prove';
+          } else {
+            status = 'waiting-to-prove';
           }
+        }
+        if (item.prove && !item.finalize) {
+          // check if the transaction is waiting to finalize
+          const currentTimestamp = new Date().getTime();
+          const blockTimestamp = Number(item.prove.blockTimestamp);
+
+          if (currentTimestamp > blockTimestamp + PROVE_PERIOD) {
+            status = 'ready-to-finalize';
+          } else {
+            status = 'waiting-to-finalize';
+          }
+        }
+        if (item.prove && item.finalize) {
+          status = 'finalized';
         }
 
         const tx = {
@@ -176,7 +178,7 @@ export const fetchTransactions = createAsyncThunk(
           address: item.addressContract,
           prove: item.prove,
           finalize: item.finalize,
-          timestamp: Number(timestamp),
+          timestamp: Number(item.blockTimestamp),
           status,
         };
 
@@ -187,30 +189,7 @@ export const fetchTransactions = createAsyncThunk(
           withdrawalTransaction.push(tx);
         }
       } else {
-        let status: statusTransaction = 'pending';
-        let l2TxHash = '';
-        const receipt = await l1PublicClient
-          .getTransactionReceipt({
-            hash: item.transactionHash,
-          })
-          .catch(() => {
-            status = 'reverted';
-          });
-
-        const block = await l1PublicClient.getBlock({
-          blockNumber: BigInt(item.blockNumber),
-        });
-        // console.log({block})
-        const timestamp = block.timestamp * 1000n;
-
-        if (receipt) {
-          const [log] = extractTransactionDepositedLogs(receipt);
-          const l2Hash = getL2TransactionHash({ log });
-          if (l2Hash) {
-            l2TxHash = l2Hash;
-            status = 'success';
-          }
-        }
+        const status: statusTransaction = 'success';
         const tx = {
           transactionHash: item.transactionHash,
           from: item.sender,
@@ -223,17 +202,12 @@ export const fetchTransactions = createAsyncThunk(
           blockNumber: item.blockNumber,
           addressContract: item.addressContract,
           version: item.version,
-          timestamp: Number(timestamp),
+          timestamp: Number(item.blockTimestamp),
           status,
-          l2TxHash,
+          l2TxHash: item.l2TransactionHash,
         };
 
-        if (!tx.l2TxHash || tx.status === 'pending') {
-          depositNeed.push(tx);
-          inProgressCount++;
-        } else {
-          depositTransaction.push(tx);
-        }
+        depositTransaction.push(tx);
       }
     }
 
@@ -247,7 +221,6 @@ export const fetchTransactions = createAsyncThunk(
       depositNeed,
       withdrawalTransaction,
       depositTransaction,
-      inProgressCount,
       actionRequiredCount,
       totalCount: +response.data.totalCount,
     };
@@ -279,7 +252,6 @@ const transactionSlice = createSlice({
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.totalCount = action.payload.totalCount;
-        state.inProgressCount = action.payload.inProgressCount;
         state.actionRequiredCount = action.payload.actionRequiredCount;
 
         state.withdrawalNeed = [...action.payload.withdrawalNeed];

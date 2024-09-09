@@ -7,7 +7,6 @@ import { useL1PublicClient } from '@/hooks/useL1PublicClient';
 import { useL2PublicClient } from '@/hooks/useL2PublicClient';
 import { useOPWagmiConfig } from '@/hooks/useOPWagmiConfig';
 import { useSwitchNetworkDirection } from '@/hooks/useSwitchNetworkPair';
-import useWithdrawal from '@/hooks/useWithdrawal';
 
 import { useAppDispatch, useAppSelector } from '@/states/hooks';
 import {
@@ -20,13 +19,7 @@ import { Token } from '@/utils/opType';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import {
-  Chain,
-  formatEther,
-  formatUnits,
-  parseEther,
-  TransactionReceipt,
-} from 'viem';
+import { Chain, formatUnits, TransactionReceipt } from 'viem';
 import { getWithdrawals, walletActionsL1 } from 'viem/op-stack';
 import { useAccount } from 'wagmi';
 import { getWalletClient } from 'wagmi/actions';
