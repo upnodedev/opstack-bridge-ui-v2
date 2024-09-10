@@ -34,3 +34,19 @@ export function formatSecsString(secs: number) {
     hours >= 1 ? (hours === 1 ? '1 hour' : `${hours} hours`) : ''
   } ${minutes >= 1 ? (minutes === 1 ? '1 min' : `${minutes} mins`) : ''}`;
 }
+
+export function formatSecsStringSec(secs: number) {
+  // pass to days and hours and minutes
+  const days = Math.floor(secs / 86400);
+  const hours = Math.floor((secs % 86400) / 3600);
+  const minutes = Math.floor((secs % 3600) / 60);
+  const seconds = Math.floor(secs % 60);
+
+  // return formatted string with days, hours and minutes if they are greater than 1 else return empty string for that unit of time days or hours or minutes
+
+  return `${days >= 1 ? (days === 1 ? '1 day' : `${days} Days`) : ''} ${
+    hours >= 1 ? (hours === 1 ? '1 hour' : `${hours} hours`) : ''
+  } ${minutes >= 1 ? (minutes === 1 ? '1 min' : `${minutes} mins`) : ''} ${
+    seconds >= 1 ? (seconds === 1 ? '1 sec' : `${seconds} secs`) : ''
+  }`;
+}

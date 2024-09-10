@@ -1,7 +1,6 @@
 import ENV from './ENV';
 import { Chain } from '@rainbow-me/rainbowkit';
-
-console.log(ENV);
+// import { mainnet, optimism } from 'viem/chains'
 
 // clone of mainnet and edit the chainId
 export const l1Chain = {

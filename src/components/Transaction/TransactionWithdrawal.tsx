@@ -44,6 +44,7 @@ function TransactionWithdrawal({ l1, l2, data, onClickDetail }: Props) {
   useEffect(() => {
     timePassedInterval();
   }, [refresh]);
+
   return (
     <TransactionWithdrawalWrapper>
       <div>

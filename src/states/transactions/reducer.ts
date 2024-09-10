@@ -6,6 +6,7 @@ import axios from 'axios';
 import {
   extractTransactionDepositedLogs,
   getL2TransactionHash,
+  getWithdrawals,
 } from 'viem/op-stack';
 
 type statusTransaction =
@@ -73,6 +74,9 @@ export interface withdrawalType {
   finalize?: Prove;
   timestamp: number;
   status: statusTransaction;
+
+  proveCompleteAt?: number;
+  finalizeCompleteAt?: number;
 }
 
 export interface depositType {
@@ -130,10 +134,13 @@ export const fetchTransactions = createAsyncThunk(
     let actionRequiredCount = 0;
 
     // write for const transaction of response.data.transactions
+    const l2BlockNumber = await l2PublicClient.getBlockNumber();
 
     for (const item of response.data.transactions as Event[]) {
       if (item.transactionType === 'withdrawal') {
         let status: statusTransaction = 'pending';
+        let proveCompleteAt: number | undefined = undefined;
+        let finalizeCompleteAt: number | undefined = undefined;
         const STATE_ROOT_PERIOD = ENV.STATE_ROOT_PERIOD * 1000;
         const PROVE_PERIOD = ENV.WITHDRAWAL_PERIOD * 1000;
 
@@ -141,24 +148,68 @@ export const fetchTransactions = createAsyncThunk(
 
         if (!item.prove && !item.finalize) {
           // check if the transaction is waiting to prove
-          const currentTimestamp = new Date().getTime();
-          const blockTimestamp = Number(item.blockTimestamp);
+          const currentTimestamp = new Date().getTime() / 1000;
+          let blockTimestamp = Number(item.blockTimestamp) + STATE_ROOT_PERIOD;
           // console.log({ currentTimestamp, blockTimestamp });
 
-          if (currentTimestamp > blockTimestamp + STATE_ROOT_PERIOD) {
+          try {
+            const { timestamp } = await l1PublicClient.getTimeToNextGame({
+              l2BlockNumber,
+              targetChain: l2PublicClient.chain,
+              chain: undefined,
+            });
+            if (timestamp) {
+              blockTimestamp = timestamp;
+            }
+          } catch (_) {
+            try {
+              const { timestamp } = await l1PublicClient.getTimeToNextL2Output({
+                l2BlockNumber,
+                targetChain: l2PublicClient.chain,
+                chain: undefined,
+              });
+              if (timestamp) {
+                blockTimestamp = timestamp;
+              }
+            } catch (_) {
+              /* empty */
+            }
+          }
+
+          if (currentTimestamp > blockTimestamp) {
             status = 'ready-to-prove';
           } else {
             status = 'waiting-to-prove';
+            proveCompleteAt = blockTimestamp;
           }
         }
         if (item.prove && !item.finalize) {
           // check if the transaction is waiting to finalize
-          const currentTimestamp = new Date().getTime();
-          const blockTimestamp = Number(item.prove.blockTimestamp);
+          const currentTimestamp = new Date().getTime()  / 1000;
+          let blockTimestamp = Number(item.prove.blockTimestamp) + PROVE_PERIOD;
 
-          if (currentTimestamp > blockTimestamp + PROVE_PERIOD) {
+          const receipt = await l2PublicClient.getTransactionReceipt({
+            hash: item.transactionHash,
+          });
+          const [message] = getWithdrawals(receipt);
+
+          try {
+            const { timestamp } = await l1PublicClient.getTimeToFinalize({
+              withdrawalHash: message.withdrawalHash,
+              targetChain: l2PublicClient.chain,
+              chain: undefined,
+            });
+            if (timestamp) {
+              blockTimestamp = timestamp;
+            }
+          } catch (error) {
+            /* empty */
+          }
+
+          if (currentTimestamp > blockTimestamp) {
             status = 'ready-to-finalize';
           } else {
+            finalizeCompleteAt = blockTimestamp;
             status = 'waiting-to-finalize';
           }
         }
@@ -180,6 +231,8 @@ export const fetchTransactions = createAsyncThunk(
           finalize: item.finalize,
           timestamp: Number(item.blockTimestamp),
           status,
+          proveCompleteAt,
+          finalizeCompleteAt,
         };
 
         if (tx.status !== 'finalized') {

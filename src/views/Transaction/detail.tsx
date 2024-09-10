@@ -1,6 +1,7 @@
 import CircleArrowDown from '@/assets/circle-arrow-down.svg';
 import { default as ETH } from '@/assets/eth.svg';
 import BoxContainer from '@/components/Box/BoxContainer';
+import CountdownText from '@/components/CountdownText';
 import { StatusBadge } from '@/components/Transaction/StatusBadge';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import { useL1PublicClient } from '@/hooks/useL1PublicClient';
@@ -42,6 +43,7 @@ function StatusWithdrawal({
   iconClassName,
   textClassName,
   detailText,
+  timing,
 }: {
   status: string;
   link?: string;
@@ -51,6 +53,7 @@ function StatusWithdrawal({
   textClassName?: string;
   iconClassName?: string;
   detailText?: React.ReactNode;
+  timing?: React.ReactNode;
 }) {
   if (!link) {
     return (
@@ -399,8 +402,10 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
             iconClassName="text-green-600"
             detailText={
               <div className="text-gray-500 text-xs font-semibold">
-                {' '}
-                ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}
+                ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}{' '}
+                {transaction?.proveCompleteAt && (
+                  <CountdownText time={transaction?.proveCompleteAt} />
+                )}
               </div>
             }
           />
@@ -428,8 +433,10 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
             iconClassName="text-green-600"
             detailText={
               <div className="text-gray-500 text-xs font-semibold">
-                {' '}
-                ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}
+                ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}{' '}
+                {transaction?.finalizeCompleteAt && (
+                  <CountdownText time={transaction?.finalizeCompleteAt} />
+                )}
               </div>
             }
           />
@@ -441,6 +448,11 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
             isLoading={false}
             textClassName="text-primary"
             iconClassName="text-primary"
+            link={
+              transaction?.finalize
+                ? `${L1NetworkExplorerUrl}/tx/${transaction.finalize.transactionHash}`
+                : undefined
+            }
           />
         </div>
 
