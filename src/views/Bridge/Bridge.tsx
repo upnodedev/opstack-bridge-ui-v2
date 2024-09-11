@@ -39,6 +39,8 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
     (state) => state.transactions.withdrawalNeed
   );
 
+  const idelFetch = useAppSelector((state) => state.transactions.counter);
+
   const [l1Token] = selectedTokenPair;
 
   const onClickMode = (mode: 'withdrawal' | 'deposit') => {
@@ -165,6 +167,9 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
             className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] text-primary border-primary flex items-center justify-center gap-2 hover:bg-slate-100`}
           >
             Activity
+            {idelFetch === 0 && (
+              <Icon icon="line-md:loading-twotone-loop" />
+            )}
             {withdrawalNeed.length > 0 && (
               <div className="animate-bounce w-5 h-5 flex items-center justify-center text-center rounded-full bg-red-500 text-white text-xs">
                 {withdrawalNeed.length}

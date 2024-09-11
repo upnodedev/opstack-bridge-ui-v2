@@ -3,11 +3,6 @@ import { useL2PublicClient } from '@/hooks/useL2PublicClient';
 import ENV from '@/utils/ENV';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import {
-  extractTransactionDepositedLogs,
-  getL2TransactionHash,
-  getWithdrawals,
-} from 'viem/op-stack';
 
 type statusTransaction =
   | 'waiting-to-prove'
@@ -57,6 +52,7 @@ interface TransactionType {
   actionRequiredCount: number;
   totalCount: number;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  counter: number;
   error: string | null;
 }
 
@@ -106,6 +102,7 @@ const initialState: TransactionType = {
   totalCount: 0,
   status: 'idle',
   error: null,
+  counter: 0,
 };
 
 // Async thunk to fetch Transactions
@@ -134,84 +131,71 @@ export const fetchTransactions = createAsyncThunk(
     let actionRequiredCount = 0;
 
     // write for const transaction of response.data.transactions
-    const l2BlockNumber = await l2PublicClient.getBlockNumber();
+    // const l2BlockNumber = await l2PublicClient.getBlockNumber();
 
     for (const item of response.data.transactions as Event[]) {
       if (item.transactionType === 'withdrawal') {
         let status: statusTransaction = 'pending';
         let proveCompleteAt: number | undefined = undefined;
         let finalizeCompleteAt: number | undefined = undefined;
+
+        // milliseconds
         const STATE_ROOT_PERIOD = ENV.STATE_ROOT_PERIOD * 1000;
         const PROVE_PERIOD = ENV.WITHDRAWAL_PERIOD * 1000;
 
-        // console.log({ prove: item.prove, finalize: item.finalize });
-
         if (!item.prove && !item.finalize) {
           // check if the transaction is waiting to prove
-          const currentTimestamp = new Date().getTime() / 1000;
-          let blockTimestamp = Number(item.blockTimestamp) + STATE_ROOT_PERIOD;
+          const blockTimestamp =
+            Number(item.blockTimestamp) + STATE_ROOT_PERIOD;
           // console.log({ currentTimestamp, blockTimestamp });
 
           try {
-            const { timestamp } = await l1PublicClient.getTimeToNextGame({
-              l2BlockNumber,
+            const receipt = await l2PublicClient.getTransactionReceipt({
+              hash: item.transactionHash,
+            });
+
+            const statusWithdrawal = await l1PublicClient.getWithdrawalStatus({
+              receipt,
               targetChain: l2PublicClient.chain,
               chain: undefined,
             });
-            if (timestamp) {
-              blockTimestamp = timestamp;
+
+            status = statusWithdrawal;
+
+            if (status === 'waiting-to-prove') {
+              proveCompleteAt = blockTimestamp;
             }
-          } catch (_) {
-            try {
-              const { timestamp } = await l1PublicClient.getTimeToNextL2Output({
-                l2BlockNumber,
-                targetChain: l2PublicClient.chain,
-                chain: undefined,
-              });
-              if (timestamp) {
-                blockTimestamp = timestamp;
-              }
-            } catch (_) {
-              /* empty */
-            }
+          } catch (error) {
+            console.error(error);
           }
 
-          if (currentTimestamp > blockTimestamp) {
-            status = 'ready-to-prove';
-          } else {
-            status = 'waiting-to-prove';
-            proveCompleteAt = blockTimestamp;
-          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
         if (item.prove && !item.finalize) {
           // check if the transaction is waiting to finalize
-          const currentTimestamp = new Date().getTime()  / 1000;
-          let blockTimestamp = Number(item.prove.blockTimestamp) + PROVE_PERIOD;
-
-          const receipt = await l2PublicClient.getTransactionReceipt({
-            hash: item.transactionHash,
-          });
-          const [message] = getWithdrawals(receipt);
+          const blockTimestamp =
+            Number(+item.prove.blockTimestamp) + PROVE_PERIOD;
 
           try {
-            const { timestamp } = await l1PublicClient.getTimeToFinalize({
-              withdrawalHash: message.withdrawalHash,
+            const receipt = await l2PublicClient.getTransactionReceipt({
+              hash: item.transactionHash,
+            });
+
+            const statusWithdrawal = await l1PublicClient.getWithdrawalStatus({
+              receipt,
               targetChain: l2PublicClient.chain,
               chain: undefined,
             });
-            if (timestamp) {
-              blockTimestamp = timestamp;
+
+            status = statusWithdrawal;
+
+            if (status === 'waiting-to-finalize') {
+              finalizeCompleteAt = blockTimestamp;
             }
           } catch (error) {
-            /* empty */
+            console.error(error);
           }
-
-          if (currentTimestamp > blockTimestamp) {
-            status = 'ready-to-finalize';
-          } else {
-            finalizeCompleteAt = blockTimestamp;
-            status = 'waiting-to-finalize';
-          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
         if (item.prove && item.finalize) {
           status = 'finalized';
@@ -262,6 +246,8 @@ export const fetchTransactions = createAsyncThunk(
 
         depositTransaction.push(tx);
       }
+
+      // sleep for 1 second
     }
 
     withdrawalNeed.sort((a, b) => b.timestamp - a.timestamp);
@@ -311,10 +297,12 @@ const transactionSlice = createSlice({
         state.depositNeed = [...action.payload.depositNeed];
         state.withdrawalTransaction = [...action.payload.withdrawalTransaction];
         state.depositTransaction = [...action.payload.depositTransaction];
+        state.counter++;
       })
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || 'Failed to fetch transactions';
+        state.counter++;
       });
   },
 });

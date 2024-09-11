@@ -2,13 +2,11 @@ import BoxContainer from '@/components/Box/BoxContainer';
 import ButtonStyled from '@/components/Button/ButtonStyled';
 import CheckBoxList from '@/components/Form/CheckBoxList';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
-import useDeposit from '@/hooks/useDeposit';
-import { useL1PublicClient } from '@/hooks/useL1PublicClient';
 import { useL2PublicClient } from '@/hooks/useL2PublicClient';
-import { useOPWagmiConfig } from '@/hooks/useOPWagmiConfig';
 import useWithdrawal from '@/hooks/useWithdrawal';
 import { useAppDispatch } from '@/states/hooks';
 import { closeModalAll } from '@/states/modal/reducer';
+import { increaseRefresh } from '@/states/refresh/reducer';
 import { formatSecsString } from '@/utils';
 import { l1Chain, l2Chain } from '@/utils/chain';
 import ENV from '@/utils/ENV';
@@ -16,10 +14,8 @@ import { Token } from '@/utils/opType';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { useState } from 'react';
 import styled from 'styled-components';
-import { formatEther, parseEther } from 'viem';
-import { walletActionsL2 } from 'viem/op-stack';
+import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
-import { getWalletClient } from 'wagmi/actions';
 
 interface Props extends SimpleComponent {
   amount: string | undefined;
@@ -45,14 +41,28 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
     setConfirm(selected);
   };
 
-  const { l1PublicClient } = useL1PublicClient();
+  const [loading, setLoading] = useState(false);
+
   const { l2PublicClient } = useL2PublicClient();
-  const { opConfig } = useOPWagmiConfig();
 
   const submitDeposit = async () => {
-    await onSubmitWithdrawal();
+    setLoading(true);
+    try {
+      const hash = await onSubmitWithdrawal();
+      if (!hash) {
+        setLoading(false);
+        return;
+      }
+      await l2PublicClient.waitForTransactionReceipt({
+        hash,
+      });
 
-    dispatch(closeModalAll());
+      dispatch(increaseRefresh());
+      dispatch(closeModalAll());
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
   };
 
   return (
@@ -149,13 +159,17 @@ function ReviewWithdrawal({ amount, l1, l2, selectedTokenPair }: Props) {
           <CheckBoxList
             items={[
               `I understand it will take ~10 mins until my funds are claimable on [${l1.name}] after I prove my withdrawal`,
-              `I understand once a deposit is initiated it cannot be sped up or cancelled`,
+              `I understand once a deposit is initiated it cannot be sped up or cancelled and wait transaction on acticity`,
               `I understand network fees are approximate and will change`,
             ]}
             onAllSelected={onAllSelected}
           />
 
-          <ButtonStyled disabled={!confirm || !!txHash} onClick={submitDeposit}>
+          <ButtonStyled
+            disabled={!confirm || !!txHash}
+            onClick={submitDeposit}
+            loading={loading}
+          >
             Initiate withdrawal
           </ButtonStyled>
         </div>

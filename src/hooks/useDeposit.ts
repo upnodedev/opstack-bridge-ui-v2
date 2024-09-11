@@ -98,7 +98,7 @@ const useDeposit = ({ amount, selectedTokenPair, address }: paramsArg) => {
   const onSubmitDeposit = useCallback(async () => {
     if (!l1PublicClient) return;
     if (txData.isETH) {
-      await writeDepositETHAsync({
+      return await writeDepositETHAsync({
         args: {
           to: address,
           amount: txData.amount,

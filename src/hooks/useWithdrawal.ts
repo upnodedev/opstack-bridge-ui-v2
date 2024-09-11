@@ -77,7 +77,7 @@ const useWithdrawal = ({ amount, selectedTokenPair, address }: paramsArg) => {
   const onSubmitWithdrawal = useCallback(async () => {
     if (!l2PublicClient) return;
     // if (txData.isETH) {
-    await writeWithdrawETHAsync({
+    return await writeWithdrawETHAsync({
       args: {
         to: address,
         amount: txData.amount,

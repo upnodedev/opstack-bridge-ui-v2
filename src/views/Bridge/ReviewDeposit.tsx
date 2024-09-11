@@ -3,8 +3,10 @@ import ButtonStyled from '@/components/Button/ButtonStyled';
 import CheckBoxList from '@/components/Form/CheckBoxList';
 import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
 import useDeposit from '@/hooks/useDeposit';
+import { useL1PublicClient } from '@/hooks/useL1PublicClient';
 import { useAppDispatch } from '@/states/hooks';
 import { closeModalAll } from '@/states/modal/reducer';
+import { increaseRefresh } from '@/states/refresh/reducer';
 import { l1Chain, l2Chain } from '@/utils/chain';
 import { Token } from '@/utils/opType';
 import { Icon } from '@iconify/react/dist/iconify.js';
@@ -32,14 +34,32 @@ function ReviewDeposit({ amount, l1, l2, selectedTokenPair }: Props) {
   });
   const [confirm, setConfirm] = useState(false);
   const dispatch = useAppDispatch();
+  const [loading, setLoading] = useState(false);
 
   const onAllSelected = (selected: boolean) => {
     setConfirm(selected);
   };
 
+  const { l1PublicClient } = useL1PublicClient();
+
   const submitDeposit = async () => {
-    await onSubmitDeposit();
-    dispatch(closeModalAll());
+    setLoading(true);
+    try {
+      const hash = await onSubmitDeposit();
+      if (!hash) {
+        setLoading(false);
+        return;
+      }
+      await l1PublicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      dispatch(increaseRefresh());
+      dispatch(closeModalAll());
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,7 +129,11 @@ function ReviewDeposit({ amount, l1, l2, selectedTokenPair }: Props) {
             onAllSelected={onAllSelected}
           />
 
-          <ButtonStyled disabled={!confirm || !!txHash} onClick={submitDeposit}>
+          <ButtonStyled
+            disabled={!confirm || !!txHash}
+            onClick={submitDeposit}
+            loading={loading}
+          >
             Initiate deposit
           </ButtonStyled>
         </div>

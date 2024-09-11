@@ -257,11 +257,6 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
     direction: 'l1',
   });
 
-  const getTransferTime = () => {
-    const transferTimeTimeSecs = ENV.WITHDRAWAL_PERIOD + ENV.STATE_ROOT_PERIOD;
-    return formatSecsString(transferTimeTimeSecs);
-  };
-
   const buttonAction = () => {
     if (!transaction) return;
     if (l1.id !== chain?.id) {
