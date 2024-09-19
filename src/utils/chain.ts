@@ -14,7 +14,7 @@ export const l1Chain = {
     },
   },
   nativeCurrency: {
-    decimals: ENV.L1_NATIVE_CURRENCY_DECIMALS,
+    decimals: parseInt(ENV.L1_NATIVE_CURRENCY_DECIMALS),
     name: ENV.L1_NATIVE_CURRENCY_NAME,
     symbol: ENV.L1_NATIVE_CURRENCY_SYMBOL,
   },
@@ -48,7 +48,7 @@ export const l2Chain = {
     },
   },
   nativeCurrency: {
-    decimals: ENV.L2_NATIVE_CURRENCY_DECIMALS,
+    decimals: parseInt(ENV.L2_NATIVE_CURRENCY_DECIMALS),
     name: ENV.L2_NATIVE_CURRENCY_NAME,
     symbol: ENV.L2_NATIVE_CURRENCY_SYMBOL,
   },
