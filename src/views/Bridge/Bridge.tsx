@@ -8,7 +8,7 @@ import DepositDetail from '@/components/Bridge/BridgeDetail';
 import PoweredBy from '@/components/PoweredBy';
 import { Token } from '@/utils/opType';
 import { useReadBalance } from '@/hooks/useReadBalance';
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 import { useAppDispatch, useAppSelector } from '@/states/hooks';
 import { openModal } from '@/states/modal/reducer';
@@ -48,11 +48,17 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
     setType(mode);
   };
 
+  const onClickMax = () => {
+    onAmountChange({ target: { value: (+balanceEth).toFixed(4) } });
+  };
+
   const balance = useReadBalance({
-    chain: l1,
+    chain: type === 'deposit' ? l1 : l2,
     // chain: l1,
     selectedToken: l1Token,
   });
+
+  const balanceEth = balance.data.value ? formatEther(balance.data.value) : 0;
 
   useEffect(() => {
     if (typeof amount === 'undefined' || amount === '') {
@@ -167,9 +173,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
             className={`w-[8rem] py-1 bg-transparent transition-all rounded-full border-[1px] text-primary border-primary flex items-center justify-center gap-2 hover:bg-slate-100`}
           >
             Activity
-            {idelFetch === 0 && (
-              <Icon icon="line-md:loading-twotone-loop" />
-            )}
+            {idelFetch === 0 && <Icon icon="line-md:loading-twotone-loop" />}
             {withdrawalNeed.length > 0 && (
               <div className="animate-bounce w-5 h-5 flex items-center justify-center text-center rounded-full bg-red-500 text-white text-xs">
                 {withdrawalNeed.length}
@@ -222,8 +226,8 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
               </div>
             </div>
             <p className="mt-2">
-              Bal : 20,000 {ENV.L1_NATIVE_CURRENCY_SYMBOL}{' '}
-              <span className="text-primary font-bold">max</span>
+              Bal : <b>{balanceEth ? (+balanceEth).toFixed(4) : 0}</b> {ENV.L1_NATIVE_CURRENCY_SYMBOL}
+              <span className="text-primary font-bold ml-2 cursor-pointer" onClick={onClickMax}>max</span>
             </p>
           </div>
         </div>
