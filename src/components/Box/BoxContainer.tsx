@@ -1,7 +1,7 @@
-import { useAppDispatch } from '@/states/hooks';
-import { closePage } from '@/states/layout/reducer';
-import { Icon } from '@iconify/react/dist/iconify.js';
-import styled from 'styled-components';
+import { useAppDispatch } from "@/states/hooks";
+import { closePage } from "@/states/layout/reducer";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import styled from "styled-components";
 
 interface Props extends SimpleComponent {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ function BoxContainer(props: Props) {
   return (
     <BoxContainerWrapper
       className={`w-full shadow-sm rounded-[1.5rem] bg-white p-8 border-gray-300 border-[1px] overflow-scroll relative ${
-        !props.height ? 'min-h-[40rem]' : props.height
+        !props.height ? "min-h-[40rem]" : props.height
       }`}
     >
       {props.hasExit && (
@@ -26,7 +26,7 @@ function BoxContainer(props: Props) {
           }}
           className="absolute right-2 top-2 z-10 text-gray-500 hover:text-gray-400 cursor-pointer"
         >
-          <Icon icon={'ion:close'} className="text-display-md " />
+          <Icon icon={"ion:close"} className="text-display-md" />
         </div>
       )}
       {props.children}
