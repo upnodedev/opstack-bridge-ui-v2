@@ -1,10 +1,11 @@
-import MainLogo from '@/assets/upnode.png';
-import { ReactNode } from 'react';
-import styled from 'styled-components';
-import ButtonConectWallet from './Button/ButtonConectWallet';
-import { useAppDispatch } from '@/states/hooks';
-import { increaseRefresh } from '@/states/refresh/reducer';
-import { useInterval } from '@/hooks/useInterval';
+import MainLogo from "@/assets/upnode.svg";
+import { useInterval } from "@/hooks/useInterval";
+import { useAppDispatch } from "@/states/hooks";
+import { increaseRefresh } from "@/states/refresh/reducer";
+import { Icon } from "@iconify/react";
+import { ReactNode } from "react";
+import styled from "styled-components";
+import ButtonConectWallet from "./Button/ButtonConectWallet";
 
 interface Props extends SimpleComponent {
   children?: ReactNode;
@@ -28,19 +29,28 @@ function Layout(props: Props) {
   return (
     <LayoutWrapper>
       {/* header */}
-      <div className="w-full flex justify-between px-10 h-16 items-center fixed top-0 left-0 bg-gray-100">
-        <div className="flex items-center gap-2">
+      <div className="w-full flex justify-between px-8 py-4 items-center max-w-7xl mx-auto">
+        <div className="flex items-center gap-8">
           <img src={MainLogo} alt="logo" className="h-10" />
-          {/* <div className='flex flex-col text-primary'>
-            <b className='tracking-widest'>UPNODE</b>
-            <b>Bridge</b>
-          </div> */}
+          <div className="flex gap-2 items-center font-semibold">
+            <div>Products</div>
+            <div>
+              <Icon icon="lucide:chevron-down" strokeWidth={5} />
+            </div>
+          </div>
+          <div className="flex gap-2 items-center font-semibold">
+            <div>Resources</div>
+            <div>
+              <Icon icon="lucide:chevron-down" strokeWidth={5} />
+            </div>
+          </div>
+          <div className="flex gap-2 items-center font-semibold">
+            <div>Pricing</div>
+          </div>
         </div>
         <ButtonConectWallet />
       </div>
-      <div className="h-screen max-h-screen pt-20 pb-6 px-4">
-        {props.children}
-      </div>
+      <div className="pt-1 pb-6 px-4">{props.children}</div>
     </LayoutWrapper>
   );
 }
