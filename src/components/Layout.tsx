@@ -50,7 +50,7 @@ function Layout(props: Props) {
         </div>
         <ButtonConectWallet />
       </div>
-      <div className="pt-1 pb-6 px-4">{props.children}</div>
+      <div className="pt-1 pb-6 px-4 h-full w-full">{props.children}</div>
     </LayoutWrapper>
   );
 }
