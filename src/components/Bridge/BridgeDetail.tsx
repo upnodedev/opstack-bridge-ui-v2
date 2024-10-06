@@ -82,7 +82,7 @@ function BridgeDetail({ l1, l2, amount, selectedTokenPair, type }: Props) {
       />
       <BridgeDetailItem
         icon="lucide:route"
-        title="Receive on [OP Mainnet]"
+        title={`Receive on ${l2.name}`}
         detail={<p>{l2.name}</p>}
       />
       <BridgeDetailItem
