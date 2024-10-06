@@ -1,29 +1,29 @@
-import CircleArrowDown from '@/assets/circle-arrow-down.svg';
-import { default as ETH } from '@/assets/eth.svg';
-import BoxContainer from '@/components/Box/BoxContainer';
-import CountdownText from '@/components/CountdownText';
-import { StatusBadge } from '@/components/Transaction/StatusBadge';
-import { useUsdtPrice } from '@/contexts/UsdtPriceContext';
-import { useL1PublicClient } from '@/hooks/useL1PublicClient';
-import { useL2PublicClient } from '@/hooks/useL2PublicClient';
-import { useOPWagmiConfig } from '@/hooks/useOPWagmiConfig';
-import { useSwitchNetworkDirection } from '@/hooks/useSwitchNetworkPair';
+import CircleArrowDown from "@/assets/circle-arrow-down.svg";
+import { default as ETH } from "@/assets/eth.svg";
+import BoxContainer from "@/components/Box/BoxContainer";
+import CountdownText from "@/components/CountdownText";
+import { StatusBadge } from "@/components/Transaction/StatusBadge";
+import { useUsdtPrice } from "@/contexts/UsdtPriceContext";
+import { useL1PublicClient } from "@/hooks/useL1PublicClient";
+import { useL2PublicClient } from "@/hooks/useL2PublicClient";
+import { useOPWagmiConfig } from "@/hooks/useOPWagmiConfig";
+import { useSwitchNetworkDirection } from "@/hooks/useSwitchNetworkPair";
 
-import { useAppDispatch, useAppSelector } from '@/states/hooks';
+import { useAppDispatch, useAppSelector } from "@/states/hooks";
 import {
   fetchTransactions,
   withdrawalType,
-} from '@/states/transactions/reducer';
-import { formatSecsString } from '@/utils';
-import ENV from '@/utils/ENV';
-import { Token } from '@/utils/opType';
-import { Icon } from '@iconify/react/dist/iconify.js';
-import { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { Chain, formatUnits, TransactionReceipt } from 'viem';
-import { getWithdrawals, walletActionsL1 } from 'viem/op-stack';
-import { useAccount } from 'wagmi';
-import { getWalletClient } from 'wagmi/actions';
+} from "@/states/transactions/reducer";
+import { formatSecsString } from "@/utils";
+import ENV from "@/utils/ENV";
+import { Token } from "@/utils/opType";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { Chain, formatUnits, TransactionReceipt } from "viem";
+import { getWithdrawals, walletActionsL1 } from "viem/op-stack";
+import { useAccount } from "wagmi";
+import { getWalletClient } from "wagmi/actions";
 
 interface Props extends SimpleComponent {
   l1: Chain;
@@ -33,6 +33,20 @@ interface Props extends SimpleComponent {
 }
 
 const TransactionDetailWrapper = styled.div``;
+
+const statuses = [
+  "waiting-to-prove",
+  "ready-to-prove",
+  "waiting-to-finalize",
+  "ready-to-finalize",
+  "finalized",
+  "success",
+  "reverted",
+  undefined,
+  "unknown",
+  "",
+  "pending",
+];
 
 function StatusWithdrawal({
   status,
@@ -44,6 +58,7 @@ function StatusWithdrawal({
   textClassName,
   detailText,
   timing,
+  isDefaultState,
 }: {
   status: string;
   link?: string;
@@ -54,6 +69,7 @@ function StatusWithdrawal({
   iconClassName?: string;
   detailText?: React.ReactNode;
   timing?: React.ReactNode;
+  isDefaultState: boolean;
 }) {
   if (!link) {
     return (
@@ -61,17 +77,37 @@ function StatusWithdrawal({
         <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
           <Icon
             icon={icon}
-            className={`${iconClassName} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}
+            className={`${
+              isDefaultState
+                ? "text-[#667085]"
+                : isLoading
+                ? "text-[#1E61F2]"
+                : "text-green-600"
+            }  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}
           />
           {isLoading && (
             <Icon
-              icon={'line-md:loading-twotone-loop'}
-              className={`${iconClassName} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10`}
+              icon={"line-md:loading-twotone-loop"}
+              className={`${
+                isDefaultState
+                  ? "text-[#667085]"
+                  : isLoading
+                  ? "text-[#1E61F2]"
+                  : "text-green-600"
+              }  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10`}
             />
           )}
         </div>
         <div>
-          <div className={`${textClassName} text-sm font-semibold`}>
+          <div
+            className={`${
+              isDefaultState
+                ? "text-[#667085]"
+                : isLoading
+                ? "text-[#1E61F2]"
+                : "text-green-600"
+            }  text-sm font-semibold`}
+          >
             {status}
           </div>
           {detailText}
@@ -86,20 +122,44 @@ function StatusWithdrawal({
       target="_blank"
       rel="noreferrer noopener"
     >
-      <div className="relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9">
+      <div
+        className={`relative bg-white rounded-full border border-[#E4E7EC] shadow-sm w-9 h-9`}
+      >
         <Icon
           icon={icon}
-          className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          className={`${
+            isDefaultState
+              ? "text-[#667085]"
+              : isLoading
+              ? "text-[#1E61F2]"
+              : "text-green-600"
+          } absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}
         />
         {isLoading && (
           <Icon
-            icon={'line-md:loading-twotone-loop'}
-            className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10"
+            icon={"line-md:loading-twotone-loop"}
+            className={`${
+              isDefaultState
+                ? "text-[#667085]"
+                : isLoading
+                ? "text-[#1E61F2]"
+                : "text-green-600"
+            }  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10`}
           />
         )}
       </div>
       <div>
-        <div className="text-blue-600 text-sm font-semibold">{status}</div>
+        <div
+          className={`${
+            isDefaultState
+              ? "text-[#667085]"
+              : isLoading
+              ? "text-[#1E61F2]"
+              : "text-green-600"
+          }  text-sm font-semibold`}
+        >
+          {status}
+        </div>
       </div>
     </a>
   );
@@ -113,6 +173,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
 
   const L1NetworkExplorerUrl = l1.blockExplorers?.default.url;
   const L2NetworkExplorerUrl = l2.blockExplorers?.default.url;
+  const [loading, setLoading] = useState(false);
 
   const transaction = useAppSelector((state) => {
     const tx = state.transactions.withdrawalNeed.find(
@@ -130,7 +191,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
     Number(transaction!.timestamp)
   ).toLocaleDateString();
 
-  const [timePassed, setTimePassed] = useState('');
+  const [timePassed, setTimePassed] = useState("");
 
   const timePassedInterval = () => {
     const currentTime = new Date().getTime();
@@ -155,6 +216,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
   const { l1PublicClient } = useL1PublicClient();
 
   const prove = async () => {
+    setLoading(true);
     if (!opConfig) return;
     if (!receipt) return;
     const L1walletClient = (
@@ -184,9 +246,11 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
     });
 
     dispatch(fetchTransactions({ address: address! }));
+    setLoading(false);
   };
 
   const finalize = async () => {
+    setLoading(true);
     if (!opConfig) return;
     if (!receipt) return;
     const L1walletClient = (
@@ -217,6 +281,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
     });
 
     dispatch(fetchTransactions({ address: address! }));
+    setLoading(false);
   };
 
   const getReceipt = async () => {
@@ -245,7 +310,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
         withdrawalHash: message.withdrawalHash,
         chain: undefined,
       });
-    console.log('ok');
+    console.log("ok");
     console.log({ period, seconds, timestamp });
   };
 
@@ -254,7 +319,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
   }, []);
 
   const { switchNetworkPair: switchToL1 } = useSwitchNetworkDirection({
-    direction: 'l1',
+    direction: "l1",
   });
 
   const buttonAction = () => {
@@ -262,29 +327,48 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
     if (l1.id !== chain?.id) {
       return (
         <button
-          onClick={() => switchToL1()}
+          disabled={loading}
+          onClick={() => {
+            setLoading(true);
+            switchToL1();
+            setLoading(false);
+          }}
           className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
         >
-          Switch to {l1.name}
+          {loading ? (
+            <Icon icon={"line-md:loading-twotone-loop"} />
+          ) : (
+            `Switch to ${l1.name}`
+          )}
         </button>
       );
     }
-    if (transaction?.status === 'ready-to-prove')
+    if (transaction?.status === "ready-to-prove")
       return (
         <button
-          onClick={prove}
-          className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
+          disabled={loading}
+          onClick={() => {
+            prove();
+          }}
+          className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold w-20 text-center"
         >
-          Prove
+          <div className="flex justify-center">
+            {loading ? <Icon icon={"line-md:loading-twotone-loop"} /> : `Prove`}
+          </div>
         </button>
       );
-    if (transaction?.status === 'ready-to-finalize')
+    if (transaction?.status === "ready-to-finalize")
       return (
         <button
+          disabled={loading}
           onClick={finalize}
           className="mt-8 py-2 px-3 rounded-full text-sm bg-primary text-white font-semibold"
         >
-          Finalize
+          {loading ? (
+            <Icon icon={"line-md:loading-twotone-loop"} />
+          ) : (
+            `Finalize`
+          )}
         </button>
       );
   };
@@ -299,18 +383,20 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
           <div className="rounded-xl bg-[#F9FAFB] border border-[#E4E7EC] p-3">
             <div className="flex justify-between">
               <div className="flex gap-2">
-                <div className="relative">
-                  <div className="w-[42px] h-[42px] rounded-full border border-[#EAECF0] bg-white"></div>
-                  <img
-                    src={ETH}
-                    alt=""
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                  />
-                  <img
-                    src={CircleArrowDown}
-                    className="w-4 absolute bottom-0 right-0"
-                    alt=""
-                  />
+                <div>
+                  <div className="relative">
+                    <div className="w-[42px] h-[42px] rounded-full border border-[#EAECF0] bg-white"></div>
+                    <img
+                      src={ETH}
+                      alt=""
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                    />
+                    <img
+                      src={CircleArrowDown}
+                      className="w-4 absolute bottom-0 right-0"
+                      alt=""
+                    />
+                  </div>
                 </div>
                 <div>
                   <div className="text-gray-900 text-sm font-semibold">
@@ -383,32 +469,37 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
             status="Withdrawn"
             link={`${L2NetworkExplorerUrl}/tx/${transaction!.transactionHash}`}
             transaction={transaction!}
-            icon={'lucide:send'}
+            icon={"lucide:send"}
             textClassName="text-primary"
             iconClassName="text-primary"
+            isDefaultState={false}
           />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
           <StatusWithdrawal
             status="State root published"
             transaction={transaction!}
-            icon={'lucide:timer'}
-            isLoading={transaction?.status === 'waiting-to-prove'}
+            icon={"lucide:timer"}
+            isLoading={transaction?.status === "waiting-to-prove"}
             textClassName="text-green-600"
             iconClassName="text-green-600"
             detailText={
               <div className="text-gray-500 text-xs font-semibold">
-                ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}{' '}
+                ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}{" "}
                 {transaction?.proveCompleteAt && (
                   <CountdownText time={transaction?.proveCompleteAt} />
                 )}
               </div>
+            }
+            isDefaultState={
+              statuses.indexOf(transaction?.status) <
+              statuses.indexOf("waiting-to-prove")
             }
           />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
           <StatusWithdrawal
             status="Prove"
             transaction={transaction!}
-            icon={'icon-park-solid:transaction-order'}
+            icon={"icon-park-solid:transaction-order"}
             isLoading={false}
             textClassName="text-primary"
             iconClassName="text-primary"
@@ -417,29 +508,37 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
                 ? `${L1NetworkExplorerUrl}/tx/${transaction.prove.transactionHash}`
                 : undefined
             }
+            isDefaultState={
+              statuses.indexOf(transaction?.status) <
+              statuses.indexOf("ready-to-prove")
+            }
           />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
           <StatusWithdrawal
             status="Challenge period"
             transaction={transaction!}
-            icon={'lucide:calendar'}
-            isLoading={transaction?.status === 'waiting-to-finalize'}
+            icon={"lucide:calendar"}
+            isLoading={transaction?.status === "waiting-to-finalize"}
             textClassName="text-green-600"
             iconClassName="text-green-600"
             detailText={
               <div className="text-gray-500 text-xs font-semibold">
-                ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}{' '}
+                ~ {formatSecsString(ENV.WITHDRAWAL_PERIOD)}{" "}
                 {transaction?.finalizeCompleteAt && (
                   <CountdownText time={transaction?.finalizeCompleteAt} />
                 )}
               </div>
+            }
+            isDefaultState={
+              statuses.indexOf(transaction?.status) <
+              statuses.indexOf("waiting-to-finalize")
             }
           />
           <div className="border-l border-[#E4E7EC] h-3 translate-x-4 my-1" />
           <StatusWithdrawal
             status="Claim withdrawal"
             transaction={transaction!}
-            icon={'lucide:star'}
+            icon={"lucide:star"}
             isLoading={false}
             textClassName="text-primary"
             iconClassName="text-primary"
@@ -447,6 +546,10 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
               transaction?.finalize
                 ? `${L1NetworkExplorerUrl}/tx/${transaction.finalize.transactionHash}`
                 : undefined
+            }
+            isDefaultState={
+              statuses.indexOf(transaction?.status) <
+              statuses.indexOf("finalized")
             }
           />
         </div>
@@ -490,7 +593,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
           />
         </div>
 
-        {transaction?.status !== 'finalized' && (
+        {transaction?.status !== "finalized" && (
           <div className="text-xs text-center text-[#667085]">
             You can safely close this modal and check back later
           </div>

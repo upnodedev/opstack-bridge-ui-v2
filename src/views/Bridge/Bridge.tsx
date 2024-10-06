@@ -97,52 +97,8 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
     direction: "l2",
   });
   const { isUnsupported } = useIsNetworkUnsupported();
-
-  const ConfirmButton = () => {
-    const shouldDisableReview =
-      parseEther(amount ?? "0") <= 0 || !!validationError;
-
-    if (isUnsupported) {
-      return (
-        <ButtonStyled color="red" disabled>
-          Unsupported Network
-        </ButtonStyled>
-      );
-    }
-
-    if (!chain) {
-      return (
-        <ButtonStyled disabled={true} className="rounded-full">
-          Connect Wallet
-        </ButtonStyled>
-      );
-    }
-    if (type === "deposit" && l1.id !== chain?.id) {
-      return (
-        <ButtonStyled onClick={() => switchToL1()}>
-          Switch to {l1.name}
-        </ButtonStyled>
-      );
-    }
-
-    if (type === "withdrawal" && l2.id !== chain?.id) {
-      return (
-        <ButtonStyled onClick={() => switchToL2()}>
-          Switch to {l2.name}
-        </ButtonStyled>
-      );
-    }
-
-    return (
-      <ButtonStyled disabled={!!shouldDisableReview} onClick={reviewDeposit}>
-        {validationError
-          ? validationError
-          : type === "deposit"
-          ? "Review Deposit"
-          : "Withdraw"}
-      </ButtonStyled>
-    );
-  };
+  const shouldDisableReview =
+    parseEther(amount ?? "0") <= 0 || !!validationError;
 
   return (
     <BoxContainer>
@@ -252,8 +208,32 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
           selectedTokenPair={selectedTokenPair}
           type={type}
         />
-
-        <ConfirmButton />
+        {isUnsupported ? (
+          <ButtonStyled color="red" disabled>
+            Unsupported Network
+          </ButtonStyled>
+        ) : !chain ? (
+          <ButtonStyled disabled={true}>Connect Wallet</ButtonStyled>
+        ) : type === "deposit" && l1.id !== chain?.id ? (
+          <ButtonStyled onClick={() => switchToL1()}>
+            Switch to {l1.name}
+          </ButtonStyled>
+        ) : type === "withdrawal" && l2.id !== chain?.id ? (
+          <ButtonStyled onClick={() => switchToL2()}>
+            Switch to {l2.name}
+          </ButtonStyled>
+        ) : (
+          <ButtonStyled
+            disabled={!!shouldDisableReview}
+            onClick={reviewDeposit}
+          >
+            {validationError
+              ? validationError
+              : type === "deposit"
+              ? "Review Deposit"
+              : "Withdraw"}
+          </ButtonStyled>
+        )}
 
         {/*  */}
         <PoweredBy />
