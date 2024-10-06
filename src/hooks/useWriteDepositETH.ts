@@ -87,7 +87,7 @@ export async function writeMutation(
   const payload = {
     to: args.to,
     value: args.amount ? args.amount : 0n,
-    gasLimit: BigInt(l2GasLimit),
+    gasLimit: BigInt(l2GasLimit || 20000),
     data: '0x',
     isCreation: args.isCreation ? args.isCreation : false,
     mint: args.amount ? args.amount : 0n,

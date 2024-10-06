@@ -22,7 +22,7 @@ interface Props extends SimpleComponent {
 const TransactionWithdrawalWrapper = styled.div``;
 
 function TransactionWithdrawal({ l1, l2, data, onClickDetail }: Props) {
-  const amount = formatUnits(BigInt(data.amount), l2.nativeCurrency.decimals);
+  const amount = formatUnits(BigInt(data.amount || 0), l2.nativeCurrency.decimals);
   const refresh = useAppSelector((state) => state.refresh.counter);
   const usdtPrice = useUsdtPrice(l1.nativeCurrency.symbol);
 

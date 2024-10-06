@@ -200,7 +200,7 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
   };
 
   const amount = formatUnits(
-    BigInt(transaction!.amount),
+    BigInt(transaction!.amount || 0),
     l2.nativeCurrency.decimals
   );
   const getAmountUsdt = (+amount * (usdtPrice || 0)).toFixed(2);
