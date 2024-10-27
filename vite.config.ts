@@ -25,5 +25,9 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    preview: {
+      port: 4173,
+      host: true, // Ensures the server binds to 0.0.0.0
+    },
   };
 });
