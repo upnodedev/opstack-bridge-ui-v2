@@ -60,17 +60,18 @@ function TransactionItemDeposit({ l1, l2, data }: Props) {
           <div className="flex justify-between">
             <div className="flex gap-2">
               <div className="relative">
-                <div className="w-[42px] h-[42px] rounded-full border border-[#EAECF0] bg-white"></div>
-                <img
-                  src={ETH}
-                  alt=""
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                />
-                <img
-                  src={CircleArrowDown}
-                  className="w-4 absolute bottom-0 right-0"
-                  alt=""
-                />
+                <div className="w-[2rem] h-[2rem] rounded-full border border-[#EAECF0] bg-white p-1 relative">
+                  <img
+                    src={ETH}
+                    alt=""
+                    className="w-full h-full object-contain"
+                  />
+                  <img
+                    src={CircleArrowDown}
+                    className="w-4 absolute -bottom-2 -right-1"
+                    alt=""
+                  />
+                </div>
               </div>
               <div>
                 <div className="text-gray-900 text-sm font-semibold">

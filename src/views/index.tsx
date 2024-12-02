@@ -53,7 +53,7 @@ function Mainview(props: Props) {
   const page = useAppSelector((state) => state.layout.currentPage);
 
   return (
-    <MainviewWrapper className="max-w-screen-sm w-full mx-auto relative">
+    <MainviewWrapper className="max-w-lg w-full mx-auto relative">
       <BoxAnimate isShow={page === 'bridgeDeposit'}>
         <Bridge
           amount={amount}

@@ -25,16 +25,16 @@ export const l1Chain = {
       apiUrl: ENV.L1_BLOCK_EXPLORER_API,
     },
   },
-  // contracts: {
-  //   multicall3: {
-  //     address: ENV.L1_MULTI_CALL3_ADDRESS,
-  //     blockCreated: ENV.L1_MULTI_CALL3_BLOCK_CREATED,
-  //   },
-  //   ensRegistry: { address: ENV.L1_ENS_REGISTRY_ADDRESS },
-  //   ensUniversalResolver: {
-  //     address: ENV.L1_ENS_UNIVERSAL_RESOLVER_ADDRESS,
-  //   },
-  // },
+  contracts: {
+    multicall3: {
+      address: ENV.L1_MULTI_CALL3_ADDRESS,
+      blockCreated: ENV.L1_MULTI_CALL3_BLOCK_CREATED,
+    },
+    // ensRegistry: { address: ENV.L1_ENS_REGISTRY_ADDRESS },
+    // ensUniversalResolver: {
+    //   address: ENV.L1_ENS_UNIVERSAL_RESOLVER_ADDRESS,
+    // },
+  },
 } as const satisfies Chain;
 
 export const l2Chain = {

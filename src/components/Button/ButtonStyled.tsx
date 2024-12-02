@@ -31,7 +31,7 @@ const ButtonStyledWrapper = styled.div<{ disabled: boolean }>`
     }
   }
   button {
-    padding: 1rem 0;
+    padding: 0.8rem 0;
     position: relative;
   }
   .overlay {
@@ -92,7 +92,7 @@ function ButtonStyled({
   };
   return (
     <ButtonStyledWrapper
-      className={`text-2xl rounded-full relative overflow-hidden text-center cursor-pointer font-bold ${classContainer}`}
+      className={`text-xl rounded-full relative overflow-hidden text-center cursor-pointer font-bold ${classContainer}`}
       style={style}
       disabled={disabled || loading}
       onClick={onClickButton}

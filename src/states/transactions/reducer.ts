@@ -160,6 +160,8 @@ export const fetchTransactions = createAsyncThunk(
               chain: undefined,
             });
 
+            console.log({ statusWithdrawal });
+
             status = statusWithdrawal;
 
             if (status === 'waiting-to-prove') {

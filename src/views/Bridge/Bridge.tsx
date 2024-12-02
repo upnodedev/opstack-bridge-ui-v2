@@ -104,10 +104,10 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
     <BoxContainer>
       <div className="flex flex-col gap-5">
         {/*  */}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div className="flex border-[1px] border-[#E4E7EC] bg-[#F9FAFB] rounded-full p-1 gap-1 text-sm font-semibold">
             <button
-              className={`w-[8rem] py-2 px-3 bg-transparent transition-all rounded-full border-[1px] ${
+              className={`w-[6rem] py-2 px-3 bg-transparent transition-all rounded-full border-[1px] ${
                 type === "deposit"
                   ? "text-primary border-primary bg-white"
                   : "text-gray-600 border-transparent"
@@ -117,7 +117,7 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
               Deposit
             </button>
             <button
-              className={`w-[8rem] py-2 px-3 bg-transparent transition-all rounded-full border-[1px] ${
+              className={`w-[6rem] py-2 px-3 bg-transparent transition-all rounded-full border-[1px] ${
                 type === "withdrawal"
                   ? "text-primary border-primary bg-white"
                   : "text-gray-600 border-transparent"
@@ -177,13 +177,13 @@ function Bridge({ amount, onAmountChange, selectedTokenPair, l1, l2 }: Props) {
                   {ENV.L1_NATIVE_CURRENCY_SYMBOL}
                 </span>
               </div>
-              <div>
+              {/* <div>
                 <Icon
                   icon={"icon-park-outline:down"}
                   fontSize={"1.5rem"}
                   className="text-white"
                 />
-              </div>
+              </div> */}
             </div>
             <p className="mt-2 text-[#475467] text-sm font-medium">
               Bal :{" "}

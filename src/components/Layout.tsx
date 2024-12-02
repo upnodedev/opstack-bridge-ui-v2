@@ -32,7 +32,7 @@ function Layout(props: Props) {
       <div className="w-full flex justify-between px-8 py-4 items-center max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
           <img src={MainLogo} alt="logo" className="h-10" />
-          <div className="flex gap-2 items-center font-semibold">
+          {/* <div className="flex gap-2 items-center font-semibold">
             <div>Products</div>
             <div>
               <Icon icon="lucide:chevron-down" strokeWidth={5} />
@@ -46,7 +46,7 @@ function Layout(props: Props) {
           </div>
           <div className="flex gap-2 items-center font-semibold">
             <div>Pricing</div>
-          </div>
+          </div> */}
         </div>
         <ButtonConectWallet />
       </div>

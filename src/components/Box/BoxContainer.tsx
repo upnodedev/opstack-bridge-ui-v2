@@ -15,7 +15,7 @@ function BoxContainer(props: Props) {
   const dispatch = useAppDispatch();
   return (
     <BoxContainerWrapper
-      className={`w-full shadow-sm rounded-[1.5rem] bg-white p-8 border-gray-300 border-[1px] overflow-scroll relative ${
+      className={`w-full shadow-sm rounded-[1.5rem] bg-white p-4 lg:p-8 border-gray-300 border-[1px] overflow-scroll relative ${
         !props.height ? "min-h-[40rem]" : props.height
       }`}
     >

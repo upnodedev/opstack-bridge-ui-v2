@@ -50,7 +50,7 @@ const Modal: React.FC<ModalProps> = ({ modalId, children }) => {
           onClick={handleClose}
           className="absolute right-2 top-2 z-10 text-gray-500 hover:text-gray-400 cursor-pointer"
         >
-          <Icon icon={'ion:close'} className="text-display-md " />
+          <Icon icon={'ion:close'} className="text-display-md" />
         </div>
         {children}
       </div>
