@@ -485,9 +485,9 @@ function TransactionDetail({ l1, l2, txHash, selectedTokenPair }: Props) {
             detailText={
               <div className="text-gray-500 text-xs font-semibold">
                 ~ {formatSecsString(ENV.STATE_ROOT_PERIOD)}{" "}
-                {transaction?.proveCompleteAt && (
+                {/* {transaction?.proveCompleteAt && (
                   <CountdownText time={transaction?.proveCompleteAt} />
-                )}
+                )} */}
               </div>
             }
             isDefaultState={
